@@ -10,6 +10,8 @@ set(src_files_assets
 	Assets/Procedural.hpp
 	Assets/Scene.cpp
 	Assets/Scene.hpp
+	Assets/SimulariumJson.cpp
+	Assets/SimulariumJson.hpp
 	Assets/Sphere.hpp
 	Assets/Texture.cpp
 	Assets/Texture.hpp
@@ -34,6 +36,7 @@ set(src_files_utilities
 	Utilities/Console.hpp
 	Utilities/Exception.hpp
 	Utilities/Glm.hpp
+	Utilities/json.hpp
 	Utilities/StbImage.cpp
 	Utilities/StbImage.hpp
 )
