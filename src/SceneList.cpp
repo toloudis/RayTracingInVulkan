@@ -1,8 +1,10 @@
 #include "SceneList.hpp"
 #include "Assets/Material.hpp"
 #include "Assets/Model.hpp"
+#include "Assets/SimulariumJson.hpp"
 #include "Assets/Texture.hpp"
 #include <functional>
+#include <fstream>
 #include <random>
 
 using namespace glm;
@@ -12,6 +14,7 @@ using Assets::Texture;
 
 const std::vector<std::pair<std::string, std::function<SceneAssets (SceneList::CameraInitialSate&)>>> SceneList::AllScenes =
 {
+	{"Simularium", SimulariumTrajectory},
 	{"Cube And Spheres", CubeAndSpheres},
 	{"Ray Tracing In One Weekend", RayTracingInOneWeekend},
 	{"Planets In One Weekend", PlanetsInOneWeekend},
@@ -315,6 +318,41 @@ SceneAssets SceneList::CornellBoxLucy(CameraInitialSate& camera)
 	models.push_back(Model::CreateCornellBox(555));
 	models.push_back(sphere);
 	models.push_back(lucy0);
+
+	return std::forward_as_tuple(std::move(models), std::vector<Texture>());
+}
+
+SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
+	// read a JSON file
+	std::string filePath("C:\\Users\\dmt\\Downloads\\actin.h5.simularium");
+	std::ifstream inputstream(filePath);
+	nlohmann::json j;
+	inputstream >> j;
+	aics::simularium::fileio::SimulariumFileReader reader;
+	aics::simularium::TrajectoryFrame trajectoryFrame;
+	bool ok = reader.DeserializeFrame(
+			j,
+			0,
+		trajectoryFrame);
+	
+	camera.ModelView = lookAt(vec3(0,0,150), vec3(0,0, 0), vec3(0, 1, 0));
+	camera.FieldOfView = 40;
+	camera.Aperture = 0.0f;
+	camera.FocusDistance = 10.0f;
+	camera.ControlSpeed = 500.0f;
+	camera.GammaCorrection = true;
+	camera.HasSky = true;
+
+	const auto i = mat4(1);
+
+	std::vector<Model> models;
+	for (auto agent: trajectoryFrame.data) {
+		auto sphere = Model::CreateSphere(vec3(agent.x, agent.y, agent.z), agent.collision_radius, Material::Lambertian(vec3(1.0f,1.0f, 0.0f)), true);
+//		sphere.Transform(translate(i, vec3(agent.x, agent.y, agent.z)));
+		models.push_back(sphere);
+	}
+
+	
 
 	return std::forward_as_tuple(std::move(models), std::vector<Texture>());
 }
