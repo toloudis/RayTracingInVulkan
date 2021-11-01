@@ -14,6 +14,7 @@ using Assets::Texture;
 
 const std::vector<std::pair<std::string, std::function<SceneAssets (SceneList::CameraInitialSate&)>>> SceneList::AllScenes =
 {
+	{"Molecules", Molecules},
 	{"Simularium", SimulariumTrajectory},
 	{"Cube And Spheres", CubeAndSpheres},
 	{"Ray Tracing In One Weekend", RayTracingInOneWeekend},
@@ -353,6 +354,37 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	}
 
 	
+
+	return std::forward_as_tuple(std::move(models), std::vector<Texture>());
+}
+SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
+	// read a JSON file
+	camera.ModelView = lookAt(vec3(0, 0, 150), vec3(0, 0, 0), vec3(0, 1, 0));
+	camera.FieldOfView = 40;
+	camera.Aperture = 0.0f;
+	camera.FocusDistance = 10.0f;
+	camera.ControlSpeed = 500.0f;
+	camera.GammaCorrection = true;
+	camera.HasSky = true;
+
+	const auto i = mat4(1);
+
+	std::vector<Model> models;
+	const int nModels = 4;
+	const int nSpheres = 4;
+	for (int j = 0; j < nModels; ++j) {
+		// create a random sphere group of 4 spheres close to each other
+		std::vector<glm::vec3> v;
+		std::vector<float> r;
+		for (int k = 0; k < nSpheres; ++k) {
+			v.push_back(glm::vec3(k, 0, 0));
+			r.push_back(1.0);
+		}
+		auto spheregroup = Model::CreateSphereGroup(v, r, Material::Lambertian(vec3(1.0f, 1.0f, 0.0f)), true);
+		models.push_back(spheregroup);
+	}
+
+
 
 	return std::forward_as_tuple(std::move(models), std::vector<Texture>());
 }

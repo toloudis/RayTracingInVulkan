@@ -311,6 +311,24 @@ Model Model::CreateSphere(const vec3& center, float radius, const Material& mate
 		isProcedural ? new Sphere(center, radius) : nullptr);
 }
 
+Model Model::CreateSphereGroup(const std::vector<glm::vec3>& center, const std::vector<float>& radius, const Material& material, bool isProcedural)
+{
+	// todo establish verts and inds for rasteriser representation
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
+	vertices.push_back(Vertex{ glm::vec3(0,0,0), glm::vec3(0,0,1), glm::vec2(0,0), 0 });
+	vertices.push_back(Vertex{ glm::vec3(0,1,0), glm::vec3(0,0,1), glm::vec2(0,1), 0 });
+	vertices.push_back(Vertex{ glm::vec3(1,0,0), glm::vec3(0,0,1), glm::vec2(1,0), 0 });
+	indices.push_back(0);
+	indices.push_back(1);
+	indices.push_back(2);
+
+
+	return Model(std::move(vertices), std::move(indices), 
+		std::vector<Material>{material},
+	    new SphereGroup(center, radius));
+}
+
 void Model::SetMaterial(const Material& material)
 {
 	if (materials_.size() != 1)

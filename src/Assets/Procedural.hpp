@@ -17,6 +17,7 @@ namespace Assets
 
 		Procedural() = default;
 		virtual ~Procedural() = default;;
-		virtual std::pair<glm::vec3, glm::vec3> BoundingBox() const = 0;
+		virtual std::pair<glm::vec3, glm::vec3> BoundingBox(size_t index = 0) const = 0;
+		virtual size_t NumBoundingBoxes() const = 0;
 	};
 }

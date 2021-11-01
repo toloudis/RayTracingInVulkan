@@ -255,14 +255,15 @@ void Application::CreateBottomLevelStructures(VkCommandBuffer commandBuffer)
 		BottomLevelGeometry geometries;
 		
 		model.Procedural()
-			? geometries.AddGeometryAabb(scene, aabbOffset, 1, true)
+			? geometries.AddGeometryAabb(scene, aabbOffset, model.Procedural()->NumBoundingBoxes(), true)
 			: geometries.AddGeometryTriangles(scene, vertexOffset, vertexCount, indexOffset, indexCount, true);
 
+		// one per model?  how would we instance a model??
 		bottomAs_.emplace_back(*deviceProcedures_, *rayTracingProperties_, geometries);
 
 		vertexOffset += vertexCount * sizeof(Assets::Vertex);
 		indexOffset += indexCount * sizeof(uint32_t);
-		aabbOffset += sizeof(VkAabbPositionsKHR);
+		aabbOffset += model.Procedural() ? model.Procedural()->NumBoundingBoxes()*sizeof(VkAabbPositionsKHR) : sizeof(VkAabbPositionsKHR);
 	}
 
 	// Allocate the structures memory.

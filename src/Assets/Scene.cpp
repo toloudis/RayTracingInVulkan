@@ -46,11 +46,20 @@ Scene::Scene(Vulkan::CommandPool& commandPool, std::vector<Model>&& models, std:
 
 		// Add optional procedurals.
 		const auto* const sphere = dynamic_cast<const Sphere*>(model.Procedural());
+		const auto* const sphereGroup = dynamic_cast<const SphereGroup*>(model.Procedural());
 		if (sphere != nullptr)
 		{
 			const auto aabb = sphere->BoundingBox();
 			aabbs.push_back({aabb.first.x, aabb.first.y, aabb.first.z, aabb.second.x, aabb.second.y, aabb.second.z});
 			procedurals.emplace_back(sphere->Center, sphere->Radius);
+		}
+		else if (sphereGroup != nullptr) {
+			for (size_t i = 0; i < sphereGroup->NumBoundingBoxes(); ++i) {
+				const auto aabb = sphereGroup->BoundingBox(i);
+				aabbs.push_back({ aabb.first.x, aabb.first.y, aabb.first.z, aabb.second.x, aabb.second.y, aabb.second.z });
+				// ???
+				procedurals.emplace_back(sphereGroup->centers[i], sphereGroup->radii[i]);
+			}
 		}
 		else
 		{
