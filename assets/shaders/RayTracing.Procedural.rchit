@@ -40,7 +40,10 @@ void main()
 	const Material material = Materials[v0.MaterialIndex];
 
 	// Compute the ray hit point properties.
-	const vec4 sphere = Spheres[gl_InstanceCustomIndexEXT];
+	const uint sphereOffset = offsets.y;
+	const vec4 sphere = Spheres[sphereOffset + gl_PrimitiveID];
+	//const vec4 sphere = Spheres[gl_InstanceCustomIndexEXT];
+
 	const vec3 center = sphere.xyz;
 	const float radius = sphere.w;
 	const vec3 point = gl_WorldRayOriginEXT + gl_HitTEXT * gl_WorldRayDirectionEXT;

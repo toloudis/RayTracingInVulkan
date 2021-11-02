@@ -370,21 +370,27 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	const auto i = mat4(1);
 
 	std::vector<Model> models;
-	const int nModels = 4;
-	const int nSpheres = 4;
+	const int nModels = 7;
+	const int nSpheres = 7;
 	for (int j = 0; j < nModels; ++j) {
+		const float atomRadius = 1.0f;
+		float modelx = 0.0;// 2.0 * atomRadius * nSpheres;
+		float modely = 2.0 * atomRadius;
 		// create a random sphere group of 4 spheres close to each other
 		std::vector<glm::vec3> v;
 		std::vector<float> r;
 		for (int k = 0; k < nSpheres; ++k) {
-			v.push_back(glm::vec3(k, 0, 0));
-			r.push_back(1.0);
+			// TODO transforms!!!!
+			v.push_back(glm::vec3(
+				(float)k*atomRadius*2.0f + modelx*j, 
+				modely*j,
+				0
+			));
+			r.push_back(atomRadius);
 		}
-		auto spheregroup = Model::CreateSphereGroup(v, r, Material::Lambertian(vec3(1.0f, 1.0f, 0.0f)), true);
+		auto spheregroup = Model::CreateSphereGroup(v, r, Material::Lambertian(vec3(1.0f - (float)j/(float)(nModels), (float)j/(float)(nModels), 0.0f)), true);
 		models.push_back(spheregroup);
 	}
-
-
 
 	return std::forward_as_tuple(std::move(models), std::vector<Texture>());
 }
