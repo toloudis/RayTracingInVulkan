@@ -249,66 +249,71 @@ Model Model::CreateSphere(const vec3& center, float radius, const Material& mate
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
 
-	const float pi = 3.14159265358979f;
-	
-	for (int j = 0; j <= stacks; ++j) 
-	{
-		const float j0 = pi * j / stacks;
+	//const float pi = 3.14159265358979f;
+	//
+	//for (int j = 0; j <= stacks; ++j) 
+	//{
+	//	const float j0 = pi * j / stacks;
 
-		// Vertex
-		const float v = radius * -std::sin(j0);
-		const float z = radius * std::cos(j0);
-		
-		// Normals		
-		const float n0 = -std::sin(j0);
-		const float n1 = std::cos(j0);
+	//	// Vertex
+	//	const float v = radius * -std::sin(j0);
+	//	const float z = radius * std::cos(j0);
+	//	
+	//	// Normals		
+	//	const float n0 = -std::sin(j0);
+	//	const float n1 = std::cos(j0);
 
-		for (int i = 0; i <= slices; ++i) 
-		{
-			const float i0 = 2 * pi * i / slices;
+	//	for (int i = 0; i <= slices; ++i) 
+	//	{
+	//		const float i0 = 2 * pi * i / slices;
 
-			const vec3 position(
-				center.x + v * std::sin(i0),
-				center.y + z,
-				center.z + v * std::cos(i0));
-			
-			const vec3 normal(
-				n0 * std::sin(i0),
-				n1,
-				n0 * std::cos(i0));
+	//		const vec3 position(
+	//			center.x + v * std::sin(i0),
+	//			center.y + z,
+	//			center.z + v * std::cos(i0));
+	//		
+	//		const vec3 normal(
+	//			n0 * std::sin(i0),
+	//			n1,
+	//			n0 * std::cos(i0));
 
-			const vec2 texCoord(
-				static_cast<float>(i) / slices,
-				static_cast<float>(j) / stacks);
+	//		const vec2 texCoord(
+	//			static_cast<float>(i) / slices,
+	//			static_cast<float>(j) / stacks);
 
-			vertices.push_back(Vertex{ position, normal, texCoord, 0 });
-		}
-	}
+	//		vertices.push_back(Vertex{ position, normal, texCoord, 0 });
+	//	}
+	//}
 
-	for (int j = 0; j < stacks; ++j)
-	{
-		for (int i = 0; i < slices; ++i)
-		{
-			const auto j0 = (j + 0) * (slices + 1);
-			const auto j1 = (j + 1) * (slices + 1);
-			const auto i0 = i + 0;
-			const auto i1 = i + 1;
-			
-			indices.push_back(j0 + i0);
-			indices.push_back(j1 + i0);
-			indices.push_back(j1 + i1);
-			
-			indices.push_back(j0 + i0);
-			indices.push_back(j1 + i1);
-			indices.push_back(j0 + i1);
-		}
-	}
-
+	//for (int j = 0; j < stacks; ++j)
+	//{
+	//	for (int i = 0; i < slices; ++i)
+	//	{
+	//		const auto j0 = (j + 0) * (slices + 1);
+	//		const auto j1 = (j + 1) * (slices + 1);
+	//		const auto i0 = i + 0;
+	//		const auto i1 = i + 1;
+	//		
+	//		indices.push_back(j0 + i0);
+	//		indices.push_back(j1 + i0);
+	//		indices.push_back(j1 + i1);
+	//		
+	//		indices.push_back(j0 + i0);
+	//		indices.push_back(j1 + i1);
+	//		indices.push_back(j0 + i1);
+	//	}
+	//}
+	vertices.push_back(Vertex{ center, glm::vec3(0,0,1), glm::vec2(0,0), 0 });
+	indices.push_back(0);
+	indices.push_back(0);
+	indices.push_back(0);
+	std::vector<glm::vec3> centers{ center };
+	std::vector<float> radii{ radius };
 	return Model(
 		std::move(vertices),
 		std::move(indices),
 		std::vector<Material>{material},
-		isProcedural ? new Sphere(center, radius) : nullptr);
+		isProcedural ? new SphereGroup(centers, radii) : nullptr);
 }
 
 Model Model::CreateSphereGroup(const std::vector<glm::vec3>& center, const std::vector<float>& radius, const Material& material, bool isProcedural)

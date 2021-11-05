@@ -325,7 +325,7 @@ SceneAssets SceneList::CornellBoxLucy(CameraInitialSate& camera)
 
 SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	// read a JSON file
-	std::string filePath("C:\\Users\\dmt\\Downloads\\actin.h5.simularium");
+	std::string filePath("C:\\Users\\danielt\\Downloads\\actin.h5.simularium");
 	std::ifstream inputstream(filePath);
 	nlohmann::json j;
 	inputstream >> j;
@@ -354,7 +354,6 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	}
 
 	
-
 	return std::forward_as_tuple(std::move(models), std::vector<Texture>());
 }
 SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
