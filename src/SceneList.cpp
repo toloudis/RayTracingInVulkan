@@ -5,6 +5,7 @@
 #include "Assets/Texture.hpp"
 #include <functional>
 #include <fstream>
+#include <iostream>
 #include <random>
 
 using namespace glm;
@@ -402,9 +403,32 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 
 	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }
+
+float frand() {
+	return (float(rand()) / float(RAND_MAX));
+}
+
+vec3 randomInBox(float x, float y, float z) {
+	return vec3(
+		(float(rand()) / float(RAND_MAX)) * x - 0.5f * x,
+		(float(rand()) / float(RAND_MAX)) * y - 0.5f * y,
+		(float(rand()) / float(RAND_MAX)) * z - 0.5f * z
+	);
+}
+vec3 randomInSphere(float r) {
+	float theta = (float(rand()) / float(RAND_MAX)) * 3.14159265;
+	float phi = (float(rand()) / float(RAND_MAX)) * 3.14159265 * 2.0;
+	float rr = r * (float(rand()) / float(RAND_MAX));
+	return vec3(
+		rr * sin(theta) * sin(phi),
+		rr * sin(theta) * cos(phi),
+		rr * cos(theta)
+	);
+}
+
 SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	// read a JSON file
-	camera.ModelView = lookAt(vec3(0, 0, 150), vec3(0, 0, 0), vec3(0, 1, 0));
+	camera.ModelView = lookAt(vec3(0, 0, 8000), vec3(0, 0, 0), vec3(0, 1, 0));
 	camera.FieldOfView = 40;
 	camera.Aperture = 0.0f;
 	camera.FocusDistance = 10.0f;
@@ -412,36 +436,40 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	camera.GammaCorrection = true;
 	camera.HasSky = true;
 
-	const auto i = mat4(1);
+	const auto identity = mat4(1);
 
 	std::vector<Model> models;
-	const int nModels = 7;
-	const int nSpheres = 7;
+	const int nModels = 16;
+	// randomly grown connected sphere cluster?
+	const int nSpheres = 4000;
 	for (int j = 0; j < nModels; ++j) {
-		const float atomRadius = 1.0f;
-		float modelx = 0.0;// 2.0 * atomRadius * nSpheres;
-		float modely = 2.0 * atomRadius;
-		// create a random sphere group of 4 spheres close to each other
+		const float atomRadius = 2.0f;
+		const float atomRadiusMax = 8.0f;
+		//float modelx = 0.0;// 2.0 * atomRadius * nSpheres;
+		//float modely = 2.0 * atomRadius;
+		// create a random sphere group of spheres "close" to each other
 		std::vector<glm::vec3> v;
 		std::vector<float> r;
 		for (int k = 0; k < nSpheres; ++k) {
-			// TODO transforms!!!!
-			v.push_back(glm::vec3(
-				(float)k*atomRadius*2.0f + modelx*j, 
-				modely*j,
-				0
-			));
-			r.push_back(atomRadius);
+			v.push_back(randomInSphere(150));
+			r.push_back(atomRadius + frand()*(atomRadiusMax-atomRadius));
 		}
 		auto spheregroup = Model::CreateSphereGroup(v, r, Material::Lambertian(vec3(1.0f - (float)j/(float)(nModels), (float)j/(float)(nModels), 0.0f)), true);
 		models.push_back(spheregroup);
 	}
 
+	// now put many instances of each model into the world.
+	// 
 	// create an instance for each model:
 	std::vector<ModelInstance> modelInstances;
+	const int nInstancesPerModel = 800;
 	for (const Model& m : models) {
-		modelInstances.push_back(ModelInstance(&m));
+		for (int k = 0; k < nInstancesPerModel; ++k) {
+			modelInstances.push_back(ModelInstance(&m, glm::transpose(glm::translate(identity, randomInBox(8000, 8000, 8000)))));
+		}
 	}
+
+	std::cout << "NSPHERES " << nInstancesPerModel * nModels * nSpheres;
 
 	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }

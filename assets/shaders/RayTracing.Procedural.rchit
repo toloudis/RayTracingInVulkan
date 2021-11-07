@@ -32,6 +32,7 @@ vec2 GetSphereTexCoord(const vec3 point)
 
 void main()
 {
+// gl_InstanceCustomIndexEXT is the model index here.
 	// Get the material.
 	const uvec2 offsets = Offsets[gl_InstanceCustomIndexEXT];
 	const uint indexOffset = offsets.x;
@@ -40,7 +41,7 @@ void main()
 	const Material material = Materials[v0.MaterialIndex];
 
 	// Compute the ray hit point properties.
-	const uint sphereOffset = offsets.y;
+	const uint sphereOffset = gl_InstanceCustomIndexEXT;//offsets.y;
 	const vec4 sphere = Spheres[sphereOffset + gl_PrimitiveID];
 	//const vec4 sphere = Spheres[gl_InstanceCustomIndexEXT];
 
