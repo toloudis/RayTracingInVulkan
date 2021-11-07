@@ -416,8 +416,8 @@ vec3 randomInBox(float x, float y, float z) {
 	);
 }
 vec3 randomInSphere(float r) {
-	float theta = (float(rand()) / float(RAND_MAX)) * 3.14159265;
-	float phi = (float(rand()) / float(RAND_MAX)) * 3.14159265 * 2.0;
+	float theta = (float(rand()) / float(RAND_MAX)) * 3.14159265f;
+	float phi = (float(rand()) / float(RAND_MAX)) * 3.14159265f * 2.0f;
 	float rr = r * (float(rand()) / float(RAND_MAX));
 	return vec3(
 		rr * sin(theta) * sin(phi),

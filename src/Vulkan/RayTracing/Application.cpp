@@ -313,7 +313,7 @@ void Application::CreateTopLevelStructures(VkCommandBuffer commandBuffer)
 		if (modelIndex != -1)
 		{
 			instances.push_back(TopLevelAccelerationStructure::CreateInstance(
-				bottomAs_[modelIndex], modelInstance.transform_, modelIndex, modelInstance.model_->Procedural() ? 1 : 0));
+				bottomAs_[modelIndex], modelInstance.transform_, (uint32_t)modelIndex, modelInstance.model_->Procedural() ? 1 : 0));
 			instanceId++;
 		}
 		else {
