@@ -469,7 +469,7 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 		}
 	}
 
-	std::cout << "NSPHERES " << nInstancesPerModel * nModels * nSpheres;
+	std::cout << "NSPHERES " << nInstancesPerModel * nModels * nSpheres << std::endl;
 
 	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }

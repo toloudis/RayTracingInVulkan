@@ -319,7 +319,7 @@ void Application::CreateTopLevelStructures(VkCommandBuffer commandBuffer)
 		else {
 			// this instance's model is not present in the scene!
 			// ERROR!!!!
-			std::cerr << "FAILED TO FIND MODEL FOR INSTANCE";
+			std::cerr << "FAILED TO FIND MODEL FOR INSTANCE" << std::endl;
 		}
 
 	}
