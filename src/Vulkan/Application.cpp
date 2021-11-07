@@ -268,10 +268,10 @@ void Application::Render(VkCommandBuffer commandBuffer, const uint32_t imageInde
 		uint32_t vertexOffset = 0;
 		uint32_t indexOffset = 0;
 
-		for (const auto& model : scene.Models())
+		for (const auto& modelInstance : scene.ModelInstances())
 		{
-			const auto vertexCount = static_cast<uint32_t>(model.NumberOfVertices());
-			const auto indexCount = static_cast<uint32_t>(model.NumberOfIndices());
+			const auto vertexCount = static_cast<uint32_t>(modelInstance.model_->NumberOfVertices());
+			const auto indexCount = static_cast<uint32_t>(modelInstance.model_->NumberOfIndices());
 
 			vkCmdDrawIndexed(commandBuffer, indexCount, 1, indexOffset, vertexOffset, 0);
 

@@ -255,7 +255,7 @@ void Application::CreateBottomLevelStructures(VkCommandBuffer commandBuffer)
 		BottomLevelGeometry geometries;
 		
 		model.Procedural()
-			? geometries.AddGeometryAabb(scene, aabbOffset, model.Procedural()->NumBoundingBoxes(), true)
+			? geometries.AddGeometryAabb(scene, aabbOffset, (uint32_t)model.Procedural()->NumBoundingBoxes(), true)
 			: geometries.AddGeometryTriangles(scene, vertexOffset, vertexCount, indexOffset, indexCount, true);
 
 		// one per model?  how would we instance a model??
@@ -263,7 +263,7 @@ void Application::CreateBottomLevelStructures(VkCommandBuffer commandBuffer)
 
 		vertexOffset += vertexCount * sizeof(Assets::Vertex);
 		indexOffset += indexCount * sizeof(uint32_t);
-		aabbOffset += model.Procedural() ? model.Procedural()->NumBoundingBoxes()*sizeof(VkAabbPositionsKHR) : sizeof(VkAabbPositionsKHR);
+		aabbOffset += model.Procedural() ? (uint32_t) (model.Procedural()->NumBoundingBoxes()*sizeof(VkAabbPositionsKHR)) : sizeof(VkAabbPositionsKHR);
 	}
 
 	// Allocate the structures memory.
@@ -306,11 +306,22 @@ void Application::CreateTopLevelStructures(VkCommandBuffer commandBuffer)
 	// Hit group 1: procedurals
 	uint32_t instanceId = 0;
 
-	for (const auto& model : scene.Models())
+	for (const auto& modelInstance : scene.ModelInstances())
 	{
-		instances.push_back(TopLevelAccelerationStructure::CreateInstance(
-			bottomAs_[instanceId], glm::mat4(1), instanceId, model.Procedural() ? 1 : 0));
-		instanceId++;
+		int64_t modelIndex = scene.indexOf(modelInstance.model_);
+		// If element was found
+		if (modelIndex != -1)
+		{
+			instances.push_back(TopLevelAccelerationStructure::CreateInstance(
+				bottomAs_[modelIndex], modelInstance.transform_, modelIndex, modelInstance.model_->Procedural() ? 1 : 0));
+			instanceId++;
+		}
+		else {
+			// this instance's model is not present in the scene!
+			// ERROR!!!!
+			std::cerr << "FAILED TO FIND MODEL FOR INSTANCE";
+		}
+
 	}
 
 	// Create and copy instances buffer (do it in a separate one-time synchronous command buffer).

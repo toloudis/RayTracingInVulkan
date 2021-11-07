@@ -12,7 +12,8 @@
 
 namespace Assets {
 
-Scene::Scene(Vulkan::CommandPool& commandPool, std::vector<Model>&& models, std::vector<Texture>&& textures) :
+Scene::Scene(Vulkan::CommandPool& commandPool, std::vector<ModelInstance>&& modelInstances, std::vector<Model>&& models, std::vector<Texture>&& textures) :
+	modelInstances_(std::move(modelInstances)),
 	models_(std::move(models)),
 	textures_(std::move(textures))
 {
@@ -24,6 +25,7 @@ Scene::Scene(Vulkan::CommandPool& commandPool, std::vector<Model>&& models, std:
 	std::vector<VkAabbPositionsKHR> aabbs;
 	std::vector<glm::uvec2> offsets;
 
+	// loops over all unique models
 	for (const auto& model : models_)
 	{
 		// Remember the index, vertex offsets.
@@ -109,6 +111,21 @@ Scene::~Scene()
 	indexBufferMemory_.reset(); // release memory after bound buffer has been destroyed
 	vertexBuffer_.reset();
 	vertexBufferMemory_.reset(); // release memory after bound buffer has been destroyed
+}
+
+int64_t Scene::indexOf(const Model* m) const {
+	// get index of model to find the bottom level AS for it.
+	auto it = std::find_if(models_.begin(), models_.end(),
+		[m](const Model& p) { return &p == m; });
+	// If element was found
+	if (it != models_.end())
+	{
+		// calculating the index of this model
+		return it - models_.begin();
+	}
+	else {
+		return -1;
+	}
 }
 
 }

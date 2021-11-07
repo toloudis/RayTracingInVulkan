@@ -2,6 +2,7 @@
 
 #include "Vulkan/Vulkan.hpp"
 #include <memory>
+#include <set>
 #include <vector>
 
 namespace Vulkan
@@ -15,6 +16,7 @@ namespace Vulkan
 namespace Assets
 {
 	class Model;
+	class ModelInstance;
 	class Texture;
 	class TextureImage;
 
@@ -27,10 +29,13 @@ namespace Assets
 		Scene& operator = (const Scene&) = delete;
 		Scene& operator = (Scene&&) = delete;
 
-		Scene(Vulkan::CommandPool& commandPool, std::vector<Model>&& models, std::vector<Texture>&& textures);
+		Scene(Vulkan::CommandPool& commandPool, std::vector<ModelInstance>&& modelInstances, std::vector<Model>&& models, std::vector<Texture>&& textures);
 		~Scene();
 
 		const std::vector<Model>& Models() const { return models_; }
+		int64_t indexOf(const Model* m) const;
+
+		const std::vector<ModelInstance>& ModelInstances() const { return modelInstances_; }
 		bool HasProcedurals() const { return static_cast<bool>(proceduralBuffer_); }
 
 		const Vulkan::Buffer& VertexBuffer() const { return *vertexBuffer_; }
@@ -43,7 +48,7 @@ namespace Assets
 		const std::vector<VkSampler> TextureSamplers() const { return textureSamplerHandles_; }
 
 	private:
-
+		const std::vector<ModelInstance> modelInstances_;
 		const std::vector<Model> models_;
 		const std::vector<Texture> textures_;
 

@@ -8,10 +8,11 @@
 namespace Assets
 {
 	class Model;
+	class ModelInstance;
 	class Texture;
 }
 
-typedef std::tuple<std::vector<Assets::Model>, std::vector<Assets::Texture>> SceneAssets;
+typedef std::tuple<std::vector<Assets::ModelInstance>, std::vector<Assets::Model>, std::vector<Assets::Texture>> SceneAssets;
 
 class SceneList final
 {

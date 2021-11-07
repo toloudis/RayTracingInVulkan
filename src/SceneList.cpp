@@ -10,6 +10,7 @@
 using namespace glm;
 using Assets::Material;
 using Assets::Model;
+using Assets::ModelInstance;
 using Assets::Texture;
 
 const std::vector<std::pair<std::string, std::function<SceneAssets (SceneList::CameraInitialSate&)>>> SceneList::AllScenes =
@@ -46,7 +47,13 @@ SceneAssets SceneList::CubeAndSpheres(CameraInitialSate& camera)
 
 	textures.push_back(Texture::LoadTexture("../assets/textures/land_ocean_ice_cloud_2048.png", Vulkan::SamplerConfig()));
 
-	return std::forward_as_tuple(std::move(models), std::move(textures));
+	// create an instance for each model:
+	std::vector<ModelInstance> modelInstances;
+	for (const Model& m : models) {
+		modelInstances.push_back(ModelInstance(&m));
+	}
+
+	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::move(textures));
 }
 
 SceneAssets SceneList::RayTracingInOneWeekend(CameraInitialSate& camera)
@@ -106,7 +113,13 @@ SceneAssets SceneList::RayTracingInOneWeekend(CameraInitialSate& camera)
 	models.push_back(Model::CreateSphere(vec3(-4, 1, 0), 1.0f, Material::Lambertian(vec3(0.4f, 0.2f, 0.1f)), isProc));
 	models.push_back(Model::CreateSphere(vec3(4, 1, 0), 1.0f, Material::Metallic(vec3(0.7f, 0.6f, 0.5f), 0.0f), isProc));
 
-	return std::forward_as_tuple(std::move(models), std::vector<Texture>());
+	// create an instance for each model:
+	std::vector<ModelInstance> modelInstances;
+	for (const Model& m : models) {
+		modelInstances.push_back(ModelInstance(&m));
+	}
+
+	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }
 
 
@@ -172,7 +185,13 @@ SceneAssets SceneList::PlanetsInOneWeekend(CameraInitialSate& camera)
 	textures.push_back(Texture::LoadTexture("../assets/textures/2k_moon.jpg", Vulkan::SamplerConfig()));
 	textures.push_back(Texture::LoadTexture("../assets/textures/land_ocean_ice_cloud_2048.png", Vulkan::SamplerConfig()));
 
-	return std::forward_as_tuple(std::move(models), std::move(textures));
+	// create an instance for each model:
+	std::vector<ModelInstance> modelInstances;
+	for (const Model& m : models) {
+		modelInstances.push_back(ModelInstance(&m));
+	}
+
+	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::move(textures));
 }
 
 SceneAssets SceneList::LucyInOneWeekend(CameraInitialSate& camera)
@@ -264,7 +283,13 @@ SceneAssets SceneList::LucyInOneWeekend(CameraInitialSate& camera)
 	models.push_back(std::move(lucy1));
 	models.push_back(std::move(lucy2));
 
-	return std::forward_as_tuple(std::move(models), std::vector<Texture>());
+	// create an instance for each model:
+	std::vector<ModelInstance> modelInstances;
+	for (const Model& m : models) {
+		modelInstances.push_back(ModelInstance(&m));
+	}
+
+	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }
 
 SceneAssets SceneList::CornellBox(CameraInitialSate& camera)
@@ -291,7 +316,13 @@ SceneAssets SceneList::CornellBox(CameraInitialSate& camera)
 	models.push_back(box0);
 	models.push_back(box1);
 
-	return std::make_tuple(std::move(models), std::vector<Texture>());
+	// create an instance for each model:
+	std::vector<ModelInstance> modelInstances;
+	for (const Model& m : models) {
+		modelInstances.push_back(ModelInstance(&m));
+	}
+
+	return std::make_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }
 
 SceneAssets SceneList::CornellBoxLucy(CameraInitialSate& camera)
@@ -320,7 +351,13 @@ SceneAssets SceneList::CornellBoxLucy(CameraInitialSate& camera)
 	models.push_back(sphere);
 	models.push_back(lucy0);
 
-	return std::forward_as_tuple(std::move(models), std::vector<Texture>());
+	// create an instance for each model:
+	std::vector<ModelInstance> modelInstances;
+	for (const Model& m : models) {
+		modelInstances.push_back(ModelInstance(&m));
+	}
+
+	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }
 
 SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
@@ -342,19 +379,28 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	camera.FocusDistance = 10.0f;
 	camera.ControlSpeed = 500.0f;
 	camera.GammaCorrection = true;
-	camera.HasSky = true;
+	camera.HasSky = false;
 
 	const auto i = mat4(1);
 
 	std::vector<Model> models;
 	for (auto agent: trajectoryFrame.data) {
-		auto sphere = Model::CreateSphere(vec3(agent.x, agent.y, agent.z), agent.collision_radius, Material::Lambertian(vec3(1.0f,1.0f, 0.0f)), true);
+		// TODO:  allow a procedural model to have a transform?
+		auto sphere = Model::CreateSphere(vec3(agent.x, agent.y, agent.z), agent.collision_radius, Material::Lambertian(vec3(1.0f,1.0f, 1.0f)), true);
 //		sphere.Transform(translate(i, vec3(agent.x, agent.y, agent.z)));
 		models.push_back(sphere);
 	}
 
+	auto domelight = Model::CreateSphere(vec3(0, 0, 0), 300.0, Material::DiffuseLight(vec3(0.5f, 0.5f, 0.5f)), true);
+	models.push_back(domelight);
 	
-	return std::forward_as_tuple(std::move(models), std::vector<Texture>());
+	// create an instance for each model:
+	std::vector<ModelInstance> modelInstances;
+	for (const Model& m : models) {
+		modelInstances.push_back(ModelInstance(&m));
+	}
+
+	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }
 SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	// read a JSON file
@@ -391,5 +437,11 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 		models.push_back(spheregroup);
 	}
 
-	return std::forward_as_tuple(std::move(models), std::vector<Texture>());
+	// create an instance for each model:
+	std::vector<ModelInstance> modelInstances;
+	for (const Model& m : models) {
+		modelInstances.push_back(ModelInstance(&m));
+	}
+
+	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }

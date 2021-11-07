@@ -50,4 +50,15 @@ namespace Assets
 		std::shared_ptr<const class Procedural> procedural_;
 	};
 
+	class ModelInstance final {
+	public:
+		ModelInstance(const Model* m, glm::mat4 t = glm::mat4(1.0f)): model_(m), transform_(t) {}
+
+		glm::mat4 transform_;
+
+		// My Model must outlive me
+		// all ModelInstances must be dropped before Models
+		const Model* model_;
+	};
+
 }
