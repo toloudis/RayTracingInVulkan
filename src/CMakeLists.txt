@@ -8,6 +8,8 @@ set(src_files_assets
 	Assets/Model.cpp
 	Assets/Model.hpp
 	Assets/Procedural.hpp
+	Assets/readcif.cpp
+	Assets/readcif.h
 	Assets/Scene.cpp
 	Assets/Scene.hpp
 	Assets/SimulariumJson.cpp
@@ -78,10 +80,10 @@ set(src_files_vulkan
 	Vulkan/GraphicsPipeline.cpp
 	Vulkan/GraphicsPipeline.hpp
 	Vulkan/Image.cpp
-	Vulkan/Image.hpp	
-	Vulkan/ImageMemoryBarrier.hpp	
+	Vulkan/Image.hpp
+	Vulkan/ImageMemoryBarrier.hpp
 	Vulkan/ImageView.cpp
-	Vulkan/ImageView.hpp	
+	Vulkan/ImageView.hpp
 	Vulkan/Instance.cpp
 	Vulkan/Instance.hpp
 	Vulkan/PipelineLayout.cpp
@@ -93,12 +95,12 @@ set(src_files_vulkan
 	Vulkan/Semaphore.cpp
 	Vulkan/Semaphore.hpp
 	Vulkan/ShaderModule.cpp
-	Vulkan/ShaderModule.hpp	
+	Vulkan/ShaderModule.hpp
 	Vulkan/SingleTimeCommands.hpp
 	Vulkan/Strings.cpp
-	Vulkan/Strings.hpp	
+	Vulkan/Strings.hpp
 	Vulkan/Surface.cpp
-	Vulkan/Surface.hpp	
+	Vulkan/Surface.hpp
 	Vulkan/SwapChain.cpp
 	Vulkan/SwapChain.hpp
 	Vulkan/Version.hpp
@@ -152,12 +154,12 @@ source_group("Vulkan" FILES ${src_files_vulkan})
 source_group("Vulkan.RayTracing" FILES ${src_files_vulkan_raytracing})
 source_group("Main" FILES ${src_files})
 
-add_executable(${exe_name} 
-	${src_files_assets} 
-	${src_files_imgui} 
-	${src_files_utilities} 
-	${src_files_vulkan} 
-	${src_files_vulkan_raytracing} 
+add_executable(${exe_name}
+	${src_files_assets}
+	${src_files_imgui}
+	${src_files_utilities}
+	${src_files_vulkan}
+	${src_files_vulkan_raytracing}
 	${src_files}
 )
 
