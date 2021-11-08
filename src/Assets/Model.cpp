@@ -5,6 +5,7 @@
 #include "Sphere.hpp"
 #include "Utilities/Exception.hpp"
 #include "Utilities/Console.hpp"
+#include "Utilities/Random.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/matrix_inverse.hpp>
@@ -42,6 +43,16 @@ namespace std
 }
 
 namespace Assets {
+	Model Model::CreateRandomSphereGroup(int nSpheres, float groupRadius, float atomRadius, float atomRadiusMax) {
+		// create a random sphere group of spheres "close" to each other
+		std::vector<glm::vec3> v;
+		std::vector<float> r;
+		for (int k = 0; k < nSpheres; ++k) {
+			v.push_back(randomInSphere(groupRadius));
+			r.push_back(atomRadius + frand() * (atomRadiusMax - atomRadius));
+		}
+		return Model::CreateSphereGroup(v, r, Material::Lambertian(vec3(0.7f, 0.7f, 0.7f)), true);
+	}
 
 	Model Model::LoadCIF(const std::string& filename) {
 		std::cout << "- loading '" << filename << "'... " << std::flush;

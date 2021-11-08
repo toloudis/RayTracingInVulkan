@@ -4,6 +4,7 @@
 #include "Assets/SimulariumJson.hpp"
 #include "Assets/Sphere.hpp"
 #include "Assets/Texture.hpp"
+#include "Utilities/Random.hpp"
 #include <functional>
 #include <fstream>
 #include <iostream>
@@ -405,28 +406,6 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }
 
-float frand() {
-	return (float(rand()) / float(RAND_MAX));
-}
-
-vec3 randomInBox(float x, float y, float z) {
-	return vec3(
-		(float(rand()) / float(RAND_MAX)) * x - 0.5f * x,
-		(float(rand()) / float(RAND_MAX)) * y - 0.5f * y,
-		(float(rand()) / float(RAND_MAX)) * z - 0.5f * z
-	);
-}
-vec3 randomInSphere(float r) {
-	float theta = (float(rand()) / float(RAND_MAX)) * 3.14159265f;
-	float phi = (float(rand()) / float(RAND_MAX)) * 3.14159265f * 2.0f;
-	float rr = r * (float(rand()) / float(RAND_MAX));
-	return vec3(
-		rr * sin(theta) * sin(phi),
-		rr * sin(theta) * cos(phi),
-		rr * cos(theta)
-	);
-}
-
 SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 
 	// read a JSON file
@@ -455,17 +434,7 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	for (int j = 0; j < nModels; ++j) {
 		const float atomRadius = 2.0f;
 		const float atomRadiusMax = 8.0f;
-		//float modelx = 0.0;// 2.0 * atomRadius * nSpheres;
-		//float modely = 2.0 * atomRadius;
-		// create a random sphere group of spheres "close" to each other
-		std::vector<glm::vec3> v;
-		std::vector<float> r;
-		for (int k = 0; k < nSpheres; ++k) {
-			v.push_back(randomInSphere(150));
-			r.push_back(atomRadius + frand()*(atomRadiusMax-atomRadius));
-		}
-		auto spheregroup = Model::CreateSphereGroup(v, r, Material::Lambertian(vec3(1.0f - (float)j/(float)(nModels), (float)j/(float)(nModels), 0.0f)), true);
-		models.push_back(spheregroup);
+		models.push_back(Model::CreateRandomSphereGroup(nSpheres, 150.0, atomRadius, atomRadiusMax));
 	}
 #endif
 	// now put many instances of each model into the world.

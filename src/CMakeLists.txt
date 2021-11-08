@@ -39,6 +39,8 @@ set(src_files_utilities
 	Utilities/Exception.hpp
 	Utilities/Glm.hpp
 	Utilities/json.hpp
+	Utilities/Random.cpp
+	Utilities/Random.hpp
 	Utilities/StbImage.cpp
 	Utilities/StbImage.hpp
 )
