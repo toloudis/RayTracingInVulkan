@@ -155,7 +155,7 @@ namespace Assets {
 		for (size_t i = 0; i < n; ++i) {
 			Atom& a = extract.atoms[i];
 			vertices.push_back(glm::vec3(a.x, a.y, a.z));
-			radii.push_back(1.0f);
+			radii.push_back(2.0f);
 		}
 
 		// Materials

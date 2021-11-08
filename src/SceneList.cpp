@@ -477,7 +477,7 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	for (const Model& m : models) {
 		for (int k = 0; k < nInstancesPerModel; ++k) {
 			nSpheres += m.Procedural()->NumBoundingBoxes();
-			modelInstances.push_back(ModelInstance(&m, glm::transpose(glm::rotate(identity, frand()*3.14159265f, randomInSphere(1.0)) * glm::translate(identity, randomInBox(4000, 4000, 4000)))));
+			modelInstances.push_back(ModelInstance(&m, glm::transpose(glm::translate(identity, randomInBox(2000, 2000, 2000)) * glm::rotate(identity, frand() * 3.14159265f, randomInSphere(1.0)))));
 		}
 	}
 
