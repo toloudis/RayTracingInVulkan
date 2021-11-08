@@ -2,6 +2,7 @@
 #include "Assets/Material.hpp"
 #include "Assets/Model.hpp"
 #include "Assets/SimulariumJson.hpp"
+#include "Assets/Sphere.hpp"
 #include "Assets/Texture.hpp"
 #include <functional>
 #include <fstream>
@@ -427,7 +428,6 @@ vec3 randomInSphere(float r) {
 }
 
 SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
-	Model::LoadCIF("C:\\Users\\dmt\\Downloads\\6vz8.cif");
 
 	// read a JSON file
 	camera.ModelView = lookAt(vec3(0, 0, 8000), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -441,6 +441,14 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	const auto identity = mat4(1);
 
 	std::vector<Model> models;
+	
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\3jcl.cif"));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\6vz8.cif"));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7dzy.cif"));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7kqe.cif"));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7jjj.cif"));
+
+#if 0
 	const int nModels = 16;
 	// randomly grown connected sphere cluster?
 	const int nSpheres = 4000;
@@ -459,19 +467,21 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 		auto spheregroup = Model::CreateSphereGroup(v, r, Material::Lambertian(vec3(1.0f - (float)j/(float)(nModels), (float)j/(float)(nModels), 0.0f)), true);
 		models.push_back(spheregroup);
 	}
-
+#endif
 	// now put many instances of each model into the world.
 	// 
 	// create an instance for each model:
 	std::vector<ModelInstance> modelInstances;
-	const int nInstancesPerModel = 800;
+	const int nInstancesPerModel = 48;
+	size_t nSpheres = 0;
 	for (const Model& m : models) {
 		for (int k = 0; k < nInstancesPerModel; ++k) {
-			modelInstances.push_back(ModelInstance(&m, glm::transpose(glm::translate(identity, randomInBox(8000, 8000, 8000)))));
+			nSpheres += m.Procedural()->NumBoundingBoxes();
+			modelInstances.push_back(ModelInstance(&m, glm::transpose(glm::rotate(identity, frand()*3.14159265f, randomInSphere(1.0)) * glm::translate(identity, randomInBox(4000, 4000, 4000)))));
 		}
 	}
 
-	std::cout << "NSPHERES " << nInstancesPerModel * nModels * nSpheres << std::endl;
+	std::cout << "NSPHERES " << nSpheres << std::endl;
 
 	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }
