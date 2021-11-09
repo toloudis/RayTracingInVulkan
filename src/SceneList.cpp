@@ -409,10 +409,10 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 
 	// read a JSON file
-	camera.ModelView = lookAt(vec3(0, 0, 8000), vec3(0, 0, 0), vec3(0, 1, 0));
+	camera.ModelView = lookAt(vec3(0, 0, 14000), vec3(0, 0, 0), vec3(0, 1, 0));
 	camera.FieldOfView = 40;
 	camera.Aperture = 0.0f;
-	camera.FocusDistance = 10.0f;
+	camera.FocusDistance = 7000.0f;
 	camera.ControlSpeed = 500.0f;
 	camera.GammaCorrection = true;
 	camera.HasSky = true;
@@ -421,11 +421,24 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 
 	std::vector<Model> models;
 	
-	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\3jcl.cif"));
-	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\6vz8.cif"));
-	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7dzy.cif"));
-	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7kqe.cif"));
-	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7jjj.cif"));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\3jcl.cif", Material::Lambertian(glm::vec3(0.5, 0, 0))));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\6vz8.cif", Material::Lambertian(glm::vec3(0.5, 0.5, 0))));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7dzy.cif", Material::Lambertian(glm::vec3(0, 0.5, 0.5))));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7kqe.cif", Material::Lambertian(glm::vec3(0.5, 0, 0.5))));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7jjj.cif", Material::Lambertian(glm::vec3(0, 0.5, 0))));
+
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\3jcl.cif", Material::Lambertian(glm::vec3(0.75, 0, 0))));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\6vz8.cif", Material::Lambertian(glm::vec3(0.75, 0.75, 0))));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7dzy.cif", Material::Lambertian(glm::vec3(0, 0.75, 0.75))));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7kqe.cif", Material::Lambertian(glm::vec3(0.75, 0, 0.75))));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7jjj.cif", Material::Lambertian(glm::vec3(0, 0.75, 0))));
+
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\3jcl.cif", Material::Lambertian(glm::vec3(0, 0, 0.5))));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\6vz8.cif", Material::Lambertian(glm::vec3(0, 0.5, 0.5))));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7dzy.cif", Material::Lambertian(glm::vec3(0.5, 0.5, 0.5))));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7kqe.cif", Material::Lambertian(glm::vec3(0.25, 0, 0.75))));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7jjj.cif", Material::Lambertian(glm::vec3(0.75, 0.5, 0.25))));
+	models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\3jcl.cif", Material::Lambertian(glm::vec3(0.33, 0.33, 0))));
 
 #if 0
 	const int nModels = 16;
@@ -441,16 +454,21 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	// 
 	// create an instance for each model:
 	std::vector<ModelInstance> modelInstances;
-	const int nInstancesPerModel = 48;
+	const int nInstancesPerModel = 4096;
 	size_t nSpheres = 0;
 	for (const Model& m : models) {
 		for (int k = 0; k < nInstancesPerModel; ++k) {
 			nSpheres += m.Procedural()->NumBoundingBoxes();
-			modelInstances.push_back(ModelInstance(&m, glm::transpose(glm::translate(identity, randomInBox(2000, 2000, 2000)) * glm::rotate(identity, frand() * 3.14159265f, randomInSphere(1.0)))));
+			modelInstances.push_back(ModelInstance(&m, glm::transpose(glm::translate(identity, randomInBox(10000, 10000, 10000)) * glm::rotate(identity, frand() * 3.14159265f, randomInSphere(1.0)))));
 		}
 	}
 
 	std::cout << "NSPHERES " << nSpheres << std::endl;
+
+	//auto domelight = Model::CreateSphere(vec3(0, 0, 0), 3000.0, Material::DiffuseLight(vec3(0.5f, 0.5f, 0.5f)), true);
+	//models.push_back(domelight);
+	//modelInstances.push_back(ModelInstance(&domelight));
+
 
 	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }

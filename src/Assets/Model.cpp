@@ -54,7 +54,7 @@ namespace Assets {
 		return Model::CreateSphereGroup(v, r, Material::Lambertian(vec3(0.7f, 0.7f, 0.7f)), true);
 	}
 
-	Model Model::LoadCIF(const std::string& filename) {
+	Model Model::LoadCIF(const std::string& filename, const Material& material) {
 		std::cout << "- loading '" << filename << "'... " << std::flush;
 		const auto timer = std::chrono::high_resolution_clock::now();
 		const std::string materialPath = std::filesystem::path(filename).parent_path().string();
@@ -169,19 +169,11 @@ namespace Assets {
 			radii.push_back(2.0f);
 		}
 
-		// Materials
-			Material m{};
-
-			m.Diffuse = vec4(0.7f, 0.7f, 0.7f, 1.0);
-			m.DiffuseTextureId = -1;
-
-
-
 		const auto elapsed = std::chrono::duration<float, std::chrono::seconds::period>(std::chrono::high_resolution_clock::now() - timer).count();
 
 		std::cout << elapsed << "s" << std::endl;
 
-		return Model::CreateSphereGroup(std::move(vertices), std::move(radii), m, true);
+		return Model::CreateSphereGroup(std::move(vertices), std::move(radii), material, true);
 
 	}
 Model Model::LoadModel(const std::string& filename)

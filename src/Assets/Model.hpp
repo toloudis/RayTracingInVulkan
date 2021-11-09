@@ -19,7 +19,7 @@ namespace Assets
 		static Model CreateSphere(const glm::vec3& center, float radius, const Material& material, bool isProcedural);
 		static Model CreateSphereGroup(const std::vector<glm::vec3>& center, const std::vector<float>& radius, const Material& material, bool isProcedural);
 		static Model CreateRandomSphereGroup(int nSpheres, float groupRadius = 150.0f, float atomRadius = 2.0f, float atomRadiusMax = 2.0f);
-		static Model LoadCIF(const std::string& filename);
+		static Model LoadCIF(const std::string& filename, const Material& material);
 
 		Model& operator = (const Model&) = delete;
 		Model& operator = (Model&&) = delete;
