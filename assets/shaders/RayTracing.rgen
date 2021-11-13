@@ -47,7 +47,7 @@ void main()
 		{
 			const float tMin = 0.001;
 			// this is a kind of maximum size scale for the whole world
-			const float tMax = 65535.0;
+			const float tMax = 128000.0;
 
 			// If we've exceeded the ray bounce limit without hitting a light source, no light is gathered.
 			// Light emitting materials never scatter in this implementation, allowing us to make this logical shortcut.

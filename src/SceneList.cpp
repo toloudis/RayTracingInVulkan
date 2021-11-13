@@ -446,10 +446,10 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	// create an instance for each model:
 	std::vector<ModelInstance> modelInstances;
 
-	const int nInstancesPerModel = 2;
-	const float volumeSize = 200.0f;
-//	const int nInstancesPerModel = 104800;
-//	const float volumeSize = 50000.0f;
+//	const int nInstancesPerModel = 2;
+//	const float volumeSize = 200.0f;
+	const int nInstancesPerModel = 104800;
+	const float volumeSize = 50000.0f;
 	size_t nSpheres = 0;
 	for (const Model& m : models) {
 		for (int k = 0; k < nInstancesPerModel; ++k) {

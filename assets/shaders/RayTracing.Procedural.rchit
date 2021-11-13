@@ -40,13 +40,20 @@ void main()
 	const Vertex v0 = UnpackVertex(vertexOffset + Indices[indexOffset]);
 	const Material material = Materials[v0.MaterialIndex];
 
-	// Compute the ray hit point properties.
-	const uint sphereOffset = gl_InstanceCustomIndexEXT;//offsets.y;
-	const vec4 sphere = Spheres[sphereOffset + gl_PrimitiveID];
-	//const vec4 sphere = Spheres[gl_InstanceCustomIndexEXT];
+	// Get the coordinates of the hit point
 
-	const vec3 center = sphere.xyz;
+	const uint sphereOffset = offsets.y;
+	const vec4 sphere = Spheres[sphereOffset + gl_PrimitiveID];
+	// get center into world space.  assume radius unchanged.
+	const vec3 center = (gl_ObjectToWorldEXT * vec4(sphere.xyz, 1.0)).xyz;
+
+	// The above code is slightly faster than reading a hitAttributeEXT value!!
+	// as this code is expanded, we may need to use hitAttributes anway later...
+	//const vec4 sphere = Sphere; // was set in intersection shader
+	//const vec3 center = sphere.xyz;
+
 	const float radius = sphere.w;
+
 	const vec3 point = gl_WorldRayOriginEXT + gl_HitTEXT * gl_WorldRayDirectionEXT;
 	const vec3 normal = (point - center) / radius;
 	const vec2 texCoord = GetSphereTexCoord(normal);

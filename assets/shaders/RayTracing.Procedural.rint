@@ -39,7 +39,7 @@ void main()
 
 		if ((tMin <= t1 && t1 < tMax) || (tMin <= t2 && t2 < tMax))
 		{
-			Sphere = sphere;
+			Sphere = vec4(center, radius);//sphere;
 			reportIntersectionEXT((tMin <= t1 && t1 < tMax) ? t1 : t2, 0);
 		}
 	}
