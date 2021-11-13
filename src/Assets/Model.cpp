@@ -43,7 +43,7 @@ namespace std
 }
 
 namespace Assets {
-	Model Model::CreateRandomSphereGroup(int nSpheres, float groupRadius, float atomRadius, float atomRadiusMax) {
+	Model Model::CreateRandomSphereGroup(int nSpheres, float groupRadius, float atomRadius, float atomRadiusMax, const std::string& name) {
 		// create a random sphere group of spheres "close" to each other
 		std::vector<glm::vec3> v;
 		std::vector<float> r;
@@ -51,7 +51,7 @@ namespace Assets {
 			v.push_back(randomInSphere(groupRadius));
 			r.push_back(atomRadius + frand() * (atomRadiusMax - atomRadius));
 		}
-		return Model::CreateSphereGroup(v, r, Material::Lambertian(vec3(0.7f, 0.7f, 0.7f)), true);
+		return Model::CreateSphereGroup(v, r, Material::Lambertian(vec3(0.7f, 0.7f, 0.7f)), true, name);
 	}
 
 	Model Model::LoadCIF(const std::string& filename, const Material& material) {
@@ -173,7 +173,7 @@ namespace Assets {
 
 		std::cout << elapsed << "s" << std::endl;
 
-		return Model::CreateSphereGroup(std::move(vertices), std::move(radii), material, true);
+		return Model::CreateSphereGroup(std::move(vertices), std::move(radii), material, true, filename);
 
 	}
 Model Model::LoadModel(const std::string& filename)
@@ -304,7 +304,7 @@ Model Model::LoadModel(const std::string& filename)
 	std::cout << "(" << objAttrib.vertices.size() << " vertices, " << uniqueVertices.size() << " unique vertices, " << materials.size() << " materials) ";
 	std::cout << elapsed << "s" << std::endl;
 
-	return Model(std::move(vertices), std::move(indices), std::move(materials), nullptr);
+	return Model(std::move(vertices), std::move(indices), std::move(materials), nullptr, filename);
 }
 
 Model Model::CreateCornellBox(const float scale)
@@ -319,7 +319,8 @@ Model Model::CreateCornellBox(const float scale)
 		std::move(vertices),
 		std::move(indices),
 		std::move(materials),
-		nullptr
+		nullptr,
+		"CornellBox"
 	);
 }
 
@@ -372,10 +373,11 @@ Model Model::CreateBox(const vec3& p0, const vec3& p1, const Material& material)
 		std::move(vertices),
 		std::move(indices),
 		std::vector<Material>{material},
-		nullptr);
+		nullptr,
+		"box");
 }
 
-Model Model::CreateSphere(const vec3& center, float radius, const Material& material, const bool isProcedural)
+Model Model::CreateSphere(const vec3& center, float radius, const Material& material, const bool isProcedural, const std::string& name)
 {
 	const int slices = 32;
 	const int stacks = 16;
@@ -447,10 +449,10 @@ Model Model::CreateSphere(const vec3& center, float radius, const Material& mate
 		std::move(vertices),
 		std::move(indices),
 		std::vector<Material>{material},
-		isProcedural ? new SphereGroup(centers, radii) : nullptr);
+		isProcedural ? new SphereGroup(centers, radii) : nullptr, name);
 }
 
-Model Model::CreateSphereGroup(const std::vector<glm::vec3>& center, const std::vector<float>& radius, const Material& material, bool isProcedural)
+Model Model::CreateSphereGroup(const std::vector<glm::vec3>& center, const std::vector<float>& radius, const Material& material, bool isProcedural, const std::string& name)
 {
 	// todo establish verts and inds for rasteriser representation
 	std::vector<Vertex> vertices;
@@ -466,7 +468,7 @@ Model Model::CreateSphereGroup(const std::vector<glm::vec3>& center, const std::
 
 	return Model(std::move(vertices), std::move(indices), 
 		std::vector<Material>{material},
-	    new SphereGroup(center, radius));
+	    new SphereGroup(center, radius), name);
 }
 
 void Model::SetMaterial(const Material& material)
@@ -490,7 +492,8 @@ void Model::Transform(const mat4& transform)
 	}
 }
 
-Model::Model(std::vector<Vertex>&& vertices, std::vector<uint32_t>&& indices, std::vector<Material>&& materials, const class Procedural* procedural) :
+Model::Model(std::vector<Vertex>&& vertices, std::vector<uint32_t>&& indices, std::vector<Material>&& materials, const class Procedural* procedural, const std::string& name) :
+	name_(name),
 	vertices_(std::move(vertices)), 
 	indices_(std::move(indices)),
 	materials_(std::move(materials)),

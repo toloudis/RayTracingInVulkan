@@ -16,9 +16,9 @@ namespace Assets
 		static Model LoadModel(const std::string& filename);
 		static Model CreateCornellBox(const float scale);
 		static Model CreateBox(const glm::vec3& p0, const glm::vec3& p1, const Material& material);
-		static Model CreateSphere(const glm::vec3& center, float radius, const Material& material, bool isProcedural);
-		static Model CreateSphereGroup(const std::vector<glm::vec3>& center, const std::vector<float>& radius, const Material& material, bool isProcedural);
-		static Model CreateRandomSphereGroup(int nSpheres, float groupRadius = 150.0f, float atomRadius = 2.0f, float atomRadiusMax = 2.0f);
+		static Model CreateSphere(const glm::vec3& center, float radius, const Material& material, bool isProcedural, const std::string& name = "sphere'");
+		static Model CreateSphereGroup(const std::vector<glm::vec3>& center, const std::vector<float>& radius, const Material& material, bool isProcedural, const std::string& name);
+		static Model CreateRandomSphereGroup(int nSpheres, float groupRadius = 150.0f, float atomRadius = 2.0f, float atomRadiusMax = 2.0f, const std::string& name = "spheregroup");
 		static Model LoadCIF(const std::string& filename, const Material& material);
 
 		Model& operator = (const Model&) = delete;
@@ -44,12 +44,15 @@ namespace Assets
 
 	private:
 
-		Model(std::vector<Vertex>&& vertices, std::vector<uint32_t>&& indices, std::vector<Material>&& materials, const class Procedural* procedural);
+		Model(std::vector<Vertex>&& vertices, std::vector<uint32_t>&& indices, std::vector<Material>&& materials, const class Procedural* procedural, const std::string& name = "unnamed");
 
 		std::vector<Vertex> vertices_;
 		std::vector<uint32_t> indices_;
 		std::vector<Material> materials_;
 		std::shared_ptr<const class Procedural> procedural_;
+
+		std::string name_;
+
 	};
 
 	class ModelInstance final {
