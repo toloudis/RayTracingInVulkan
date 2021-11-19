@@ -5,5 +5,7 @@
 
 namespace Assets
 {
-	Model LoadCIF(const std::string& filename);
+	struct Material;
+
+	Model LoadCIF(const std::string& filename, const Material& material);
 }
