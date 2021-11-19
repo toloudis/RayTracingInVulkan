@@ -1,4 +1,5 @@
 #include "SceneList.hpp"
+#include "Assets/LoadCifModel.hpp"
 #include "Assets/Material.hpp"
 #include "Assets/Model.hpp"
 #include "Assets/SimulariumJson.hpp"
@@ -427,7 +428,7 @@ vec3 randomInSphere(float r) {
 }
 
 SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
-	Model::LoadCIF("C:\\Users\\dmt\\Downloads\\6vz8.cif");
+	Assets::LoadCIF("C:\\Users\\dmt\\Downloads\\6vz8.cif");
 
 	// read a JSON file
 	camera.ModelView = lookAt(vec3(0, 0, 8000), vec3(0, 0, 0), vec3(0, 1, 0));

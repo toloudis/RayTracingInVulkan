@@ -18,7 +18,6 @@ namespace Assets
 		static Model CreateBox(const glm::vec3& p0, const glm::vec3& p1, const Material& material);
 		static Model CreateSphere(const glm::vec3& center, float radius, const Material& material, bool isProcedural);
 		static Model CreateSphereGroup(const std::vector<glm::vec3>& center, const std::vector<float>& radius, const Material& material, bool isProcedural);
-		static Model LoadCIF(const std::string& filename);
 
 		Model& operator = (const Model&) = delete;
 		Model& operator = (Model&&) = delete;

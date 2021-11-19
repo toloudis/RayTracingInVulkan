@@ -1,7 +1,6 @@
 #include "Model.hpp"
 #include "CornellBox.hpp"
 #include "Procedural.hpp"
-#include "readcif.h"
 #include "Sphere.hpp"
 #include "Utilities/Exception.hpp"
 #include "Utilities/Console.hpp"
@@ -43,145 +42,15 @@ namespace std
 
 namespace Assets {
 
-	Model Model::LoadCIF(const std::string& filename) {
-		std::cout << "- loading '" << filename << "'... " << std::flush;
-		const auto timer = std::chrono::high_resolution_clock::now();
-		const std::string materialPath = std::filesystem::path(filename).parent_path().string();
-
-		std::vector<glm::vec3> vertices;
-		std::vector<float> radii;
-
-#define MAX_CHAR_ATOM_NAME 4
-#define MAX_CHAR_RES_NAME 4
-#define MAX_CHAR_CHAIN_ID 4
-		struct Atom
-		{
-			Atom() {
-				clear();
-			}
-			void clear() {
-				memset(atom_name, 0, MAX_CHAR_ATOM_NAME);
-				memset(residue_name, 0, MAX_CHAR_RES_NAME);
-				memset(chain_id, 0, MAX_CHAR_CHAIN_ID);
-			}
-			char element;
-			char atom_name[MAX_CHAR_ATOM_NAME];
-			char residue_name[MAX_CHAR_RES_NAME];
-			char chain_id[MAX_CHAR_CHAIN_ID];
-			int residue_num;
-			float x, y, z;
-		};
-		static const bool Required = true;
-
-		struct ExtractCIF : readcif::CIFFile {
-			ExtractCIF()
-			{
-				register_heuristic_stylized_detection();
-				// Personal preference, I like lambda functions better.
-				// The lambda functions are needed because parse_XXXX
-				// are member functions.
-				register_category("atom_site",
-					[this]() {
-						parse_atom_site();
-					});
-			}
-			void parse_atom_site()
-			{
-				readcif::CIFFile::ParseValues pv;
-				pv.reserve(10);
-				Atom atom;
-				pv.emplace_back(get_column("type_symbol", Required),
-					[&atom](const char* start) {
-						atom.element = *start;
-					});
-				pv.emplace_back(get_column("label_atom_id", Required),
-					[&atom](const char* start, const char* end) {
-						size_t count = end - start;
-						if (count > MAX_CHAR_ATOM_NAME)
-							count = MAX_CHAR_ATOM_NAME;
-						strncpy(atom.atom_name, start, count);
-					});
-				pv.emplace_back(get_column("label_comp_id", Required),
-					[&atom](const char* start, const char* end) {
-						size_t count = end - start;
-						if (count > MAX_CHAR_RES_NAME)
-							count = MAX_CHAR_RES_NAME;
-						strncpy(atom.residue_name, start, count);
-					});
-				pv.emplace_back(get_column("label_asym_id"),
-					[&atom](const char* start, const char* end) {
-						size_t count = end - start;
-						if (count > MAX_CHAR_CHAIN_ID)
-							count = MAX_CHAR_CHAIN_ID;
-						strncpy(atom.chain_id, start, count);
-					});
-				pv.emplace_back(get_column("label_seq_id", Required),
-					[&atom](const char* start) {
-						atom.residue_num = readcif::str_to_int(start);
-					});
-				// x, y, z are not required by mmCIF, but are by us
-				pv.emplace_back(get_column("Cartn_x", Required),
-					[&atom](const char* start) {
-						atom.x = (float)readcif::str_to_float(start);
-					});
-				pv.emplace_back(get_column("Cartn_y", Required),
-					[&atom](const char* start) {
-						atom.y = (float)readcif::str_to_float(start);
-					});
-				pv.emplace_back(get_column("Cartn_z", Required),
-					[&atom](const char* start) {
-						atom.z = (float)readcif::str_to_float(start);
-					});
-				while (parse_row(pv)) {
-					atoms.push_back(atom);
-					atom.clear();
-				}
-			}
-				
-				std::vector<Atom> atoms;
-		};
-
-		ExtractCIF extract;
-
-		try {
-			extract.parse_file(filename.c_str());
-		}
-		catch (std::exception& e) {
-			std::cerr << e.what() << '\n';
-		}
-
-		size_t n = extract.atoms.size();
-		std::cout << n << " atoms\n";
-		for (size_t i = 0; i < n; ++i) {
-			Atom& a = extract.atoms[i];
-			vertices.push_back(glm::vec3(a.x, a.y, a.z));
-			radii.push_back(1.0f);
-		}
-
-		// Materials
-			Material m{};
-
-			m.Diffuse = vec4(0.7f, 0.7f, 0.7f, 1.0);
-			m.DiffuseTextureId = -1;
-
-
-
-		const auto elapsed = std::chrono::duration<float, std::chrono::seconds::period>(std::chrono::high_resolution_clock::now() - timer).count();
-
-		std::cout << elapsed << "s" << std::endl;
-
-		return Model::CreateSphereGroup(std::move(vertices), std::move(radii), m, true);
-
-	}
 Model Model::LoadModel(const std::string& filename)
 {
 	std::cout << "- loading '" << filename << "'... " << std::flush;
 
 	const auto timer = std::chrono::high_resolution_clock::now();
 	const std::string materialPath = std::filesystem::path(filename).parent_path().string();
-	
+
 	tinyobj::ObjReader objReader;
-	
+
 	if (!objReader.ParseFromFile(filename))
 	{
 		Throw(std::runtime_error("failed to load model '" + filename + "':\n" + objReader.Error()));
@@ -278,7 +147,7 @@ Model Model::LoadModel(const std::string& filename)
 	if (objAttrib.normals.empty())
 	{
 		std::vector<vec3> normals(vertices.size());
-		
+
 		for (size_t i = 0; i < indices.size(); i += 3)
 		{
 			const auto normal = normalize(cross(
@@ -287,7 +156,7 @@ Model Model::LoadModel(const std::string& filename)
 
 			vertices[indices[i + 0]].Normal += normal;
 			vertices[indices[i + 1]].Normal += normal;
-			vertices[indices[i + 2]].Normal += normal;			
+			vertices[indices[i + 2]].Normal += normal;
 		}
 
 		for (auto& vertex : vertices)
@@ -322,7 +191,7 @@ Model Model::CreateCornellBox(const float scale)
 
 Model Model::CreateBox(const vec3& p0, const vec3& p1, const Material& material)
 {
-	std::vector<Vertex> vertices = 
+	std::vector<Vertex> vertices =
 	{
 		Vertex{vec3(p0.x, p0.y, p0.z), vec3(-1, 0, 0), vec2(0), 0},
 		Vertex{vec3(p0.x, p0.y, p1.z), vec3(-1, 0, 0), vec2(0), 0},
@@ -376,25 +245,25 @@ Model Model::CreateSphere(const vec3& center, float radius, const Material& mate
 {
 	const int slices = 32;
 	const int stacks = 16;
-	
+
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
 
 	//const float pi = 3.14159265358979f;
 	//
-	//for (int j = 0; j <= stacks; ++j) 
+	//for (int j = 0; j <= stacks; ++j)
 	//{
 	//	const float j0 = pi * j / stacks;
 
 	//	// Vertex
 	//	const float v = radius * -std::sin(j0);
 	//	const float z = radius * std::cos(j0);
-	//	
-	//	// Normals		
+	//
+	//	// Normals
 	//	const float n0 = -std::sin(j0);
 	//	const float n1 = std::cos(j0);
 
-	//	for (int i = 0; i <= slices; ++i) 
+	//	for (int i = 0; i <= slices; ++i)
 	//	{
 	//		const float i0 = 2 * pi * i / slices;
 
@@ -402,7 +271,7 @@ Model Model::CreateSphere(const vec3& center, float radius, const Material& mate
 	//			center.x + v * std::sin(i0),
 	//			center.y + z,
 	//			center.z + v * std::cos(i0));
-	//		
+	//
 	//		const vec3 normal(
 	//			n0 * std::sin(i0),
 	//			n1,
@@ -424,11 +293,11 @@ Model Model::CreateSphere(const vec3& center, float radius, const Material& mate
 	//		const auto j1 = (j + 1) * (slices + 1);
 	//		const auto i0 = i + 0;
 	//		const auto i1 = i + 1;
-	//		
+	//
 	//		indices.push_back(j0 + i0);
 	//		indices.push_back(j1 + i0);
 	//		indices.push_back(j1 + i1);
-	//		
+	//
 	//		indices.push_back(j0 + i0);
 	//		indices.push_back(j1 + i1);
 	//		indices.push_back(j0 + i1);
@@ -461,7 +330,7 @@ Model Model::CreateSphereGroup(const std::vector<glm::vec3>& center, const std::
 	indices.push_back(0);
 
 
-	return Model(std::move(vertices), std::move(indices), 
+	return Model(std::move(vertices), std::move(indices),
 		std::vector<Material>{material},
 	    new SphereGroup(center, radius));
 }
@@ -488,7 +357,7 @@ void Model::Transform(const mat4& transform)
 }
 
 Model::Model(std::vector<Vertex>&& vertices, std::vector<uint32_t>&& indices, std::vector<Material>&& materials, const class Procedural* procedural) :
-	vertices_(std::move(vertices)), 
+	vertices_(std::move(vertices)),
 	indices_(std::move(indices)),
 	materials_(std::move(materials)),
 	procedural_(procedural)
