@@ -408,17 +408,6 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 }
 
 SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
-	//Assets::LoadCIF("C:\\Users\\dmt\\Downloads\\6vz8.cif");
-
-	// read a JSON file
-	camera.ModelView = lookAt(vec3(0, 0, 8000), vec3(0, 0, 0), vec3(0, 1, 0));
-	camera.FieldOfView = 40;
-	camera.Aperture = 0.0f;
-	camera.FocusDistance = 10.0f;
-	camera.ControlSpeed = 500.0f;
-	camera.GammaCorrection = true;
-	camera.HasSky = true;
-
 	const auto identity = mat4(1);
 
 	std::vector<Model> models;
