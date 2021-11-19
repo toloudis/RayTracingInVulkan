@@ -3,7 +3,9 @@
 #include "Assets/Material.hpp"
 #include "Assets/Model.hpp"
 #include "Assets/SimulariumJson.hpp"
+#include "Assets/Sphere.hpp"
 #include "Assets/Texture.hpp"
+#include "Utilities/Random.hpp"
 #include <functional>
 #include <fstream>
 #include <iostream>
@@ -405,28 +407,6 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }
 
-float frand() {
-	return (float(rand()) / float(RAND_MAX));
-}
-
-vec3 randomInBox(float x, float y, float z) {
-	return vec3(
-		(float(rand()) / float(RAND_MAX)) * x - 0.5f * x,
-		(float(rand()) / float(RAND_MAX)) * y - 0.5f * y,
-		(float(rand()) / float(RAND_MAX)) * z - 0.5f * z
-	);
-}
-vec3 randomInSphere(float r) {
-	float theta = (float(rand()) / float(RAND_MAX)) * 3.14159265f;
-	float phi = (float(rand()) / float(RAND_MAX)) * 3.14159265f * 2.0f;
-	float rr = r * (float(rand()) / float(RAND_MAX));
-	return vec3(
-		rr * sin(theta) * sin(phi),
-		rr * sin(theta) * cos(phi),
-		rr * cos(theta)
-	);
-}
-
 SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	Assets::LoadCIF("C:\\Users\\dmt\\Downloads\\6vz8.cif");
 
@@ -442,37 +422,67 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	const auto identity = mat4(1);
 
 	std::vector<Model> models;
+	for (int ii = 0; ii < 4; ++ii) {
+		models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\3jcl.cif", Material::Lambertian(glm::vec3(0.5, 0, 0))));
+		models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\6vz8.cif", Material::Lambertian(glm::vec3(0.5, 0.5, 0))));
+		models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7dzy.cif", Material::Lambertian(glm::vec3(0, 0.5, 0.5))));
+		models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7kqe.cif", Material::Lambertian(glm::vec3(0.5, 0, 0.5))));
+		models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7jjj.cif", Material::Lambertian(glm::vec3(0, 0.5, 0))));
+
+		models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\3jcl.cif", Material::Lambertian(glm::vec3(0.75, 0, 0))));
+		models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\6vz8.cif", Material::Lambertian(glm::vec3(0.75, 0.75, 0))));
+		models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7dzy.cif", Material::Lambertian(glm::vec3(0, 0.75, 0.75))));
+		models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7kqe.cif", Material::Lambertian(glm::vec3(0.75, 0, 0.75))));
+		models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7jjj.cif", Material::Lambertian(glm::vec3(0, 0.75, 0))));
+
+		models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\3jcl.cif", Material::Lambertian(glm::vec3(0, 0, 0.5))));
+		models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\6vz8.cif", Material::Lambertian(glm::vec3(0, 0.5, 0.5))));
+		models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7dzy.cif", Material::Lambertian(glm::vec3(0.5, 0.5, 0.5))));
+		models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7kqe.cif", Material::Lambertian(glm::vec3(0.25, 0, 0.75))));
+		models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\7jjj.cif", Material::Lambertian(glm::vec3(0.75, 0.5, 0.25))));
+		models.push_back(Model::LoadCIF("C:\\Users\\danielt\\Downloads\\3jcl.cif", Material::Lambertian(glm::vec3(0.33, 0.33, 0))));
+	}
+#if 0
 	const int nModels = 16;
 	// randomly grown connected sphere cluster?
 	const int nSpheres = 4000;
 	for (int j = 0; j < nModels; ++j) {
 		const float atomRadius = 2.0f;
 		const float atomRadiusMax = 8.0f;
-		//float modelx = 0.0;// 2.0 * atomRadius * nSpheres;
-		//float modely = 2.0 * atomRadius;
-		// create a random sphere group of spheres "close" to each other
-		std::vector<glm::vec3> v;
-		std::vector<float> r;
-		for (int k = 0; k < nSpheres; ++k) {
-			v.push_back(randomInSphere(150));
-			r.push_back(atomRadius + frand()*(atomRadiusMax-atomRadius));
-		}
-		auto spheregroup = Model::CreateSphereGroup(v, r, Material::Lambertian(vec3(1.0f - (float)j/(float)(nModels), (float)j/(float)(nModels), 0.0f)), true);
-		models.push_back(spheregroup);
+		models.push_back(Model::CreateRandomSphereGroup(nSpheres, 150.0, atomRadius, atomRadiusMax));
 	}
-
+#endif
 	// now put many instances of each model into the world.
 	// 
 	// create an instance for each model:
 	std::vector<ModelInstance> modelInstances;
-	const int nInstancesPerModel = 800;
+
+//	const int nInstancesPerModel = 2;
+//	const float volumeSize = 200.0f;
+	const int nInstancesPerModel = 104800;
+	const float volumeSize = 50000.0f;
+	size_t nSpheres = 0;
 	for (const Model& m : models) {
 		for (int k = 0; k < nInstancesPerModel; ++k) {
-			modelInstances.push_back(ModelInstance(&m, glm::transpose(glm::translate(identity, randomInBox(8000, 8000, 8000)))));
+			nSpheres += m.Procedural()->NumBoundingBoxes();
+			modelInstances.push_back(ModelInstance(&m, glm::transpose(glm::translate(identity, randomInBox(volumeSize, volumeSize, volumeSize)) * glm::rotate(identity, frand() * 3.14159265f, randomInSphere(1.0)))));
 		}
+		//break;
 	}
 
-	std::cout << "NSPHERES " << nInstancesPerModel * nModels * nSpheres << std::endl;
+	std::cout << "NSPHERES " << nSpheres << std::endl;
+
+	auto domelight = Model::CreateSphere(vec3(0, 0, 0), volumeSize*1.7, Material::DiffuseLight(vec3(0.5f, 0.5f, 0.5f)), true);
+	models.push_back(domelight);
+	modelInstances.push_back(ModelInstance(&models[models.size()-1]));
+
+	camera.FieldOfView = 40;
+	camera.Aperture = 0.0f;
+	camera.ControlSpeed = 500.0f;
+	camera.GammaCorrection = true;
+	camera.FocusDistance = volumeSize/2.0f;
+	camera.ModelView = lookAt(vec3(0, 0, volumeSize*1.6), vec3(0, 0, 0), vec3(0, 1, 0));
+	camera.HasSky = false;
 
 	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }
