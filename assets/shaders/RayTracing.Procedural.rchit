@@ -7,7 +7,7 @@
 layout(binding = 4) readonly buffer VertexArray { float Vertices[]; };
 layout(binding = 5) readonly buffer IndexArray { uint Indices[]; };
 layout(binding = 6) readonly buffer MaterialArray { Material[] Materials; };
-layout(binding = 7) readonly buffer OffsetArray { uvec2[] Offsets; };
+layout(binding = 7) readonly buffer OffsetArray { uvec4[] Offsets; };
 layout(binding = 8) uniform sampler2D[] TextureSamplers;
 layout(binding = 9) readonly buffer SphereArray { vec4[] Spheres; };
 
@@ -34,7 +34,7 @@ void main()
 {
 // gl_InstanceCustomIndexEXT is the model index here.
 	// Get the material.
-	const uvec2 offsets = Offsets[gl_InstanceCustomIndexEXT];
+	const uvec4 offsets = Offsets[gl_InstanceCustomIndexEXT];
 	const uint indexOffset = offsets.x;
 	const uint vertexOffset = offsets.y;
 	const Vertex v0 = UnpackVertex(vertexOffset + Indices[indexOffset]);
@@ -42,7 +42,7 @@ void main()
 
 	// Get the coordinates of the hit point
 
-	const uint sphereOffset = offsets.y;
+	const uint sphereOffset = offsets.z;
 	const vec4 sphere = Spheres[sphereOffset + gl_PrimitiveID];
 	// get center into world space.  assume radius unchanged.
 	const vec3 center = (gl_ObjectToWorldEXT * vec4(sphere.xyz, 1.0)).xyz;

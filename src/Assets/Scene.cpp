@@ -23,7 +23,7 @@ Scene::Scene(Vulkan::CommandPool& commandPool, std::vector<ModelInstance>&& mode
 	std::vector<Material> materials;
 	std::vector<glm::vec4> procedurals;
 	std::vector<VkAabbPositionsKHR> aabbs;
-	std::vector<glm::uvec2> offsets;
+	std::vector<glm::uvec4> offsets;
 
 	// loops over all unique models
 	for (const auto& model : models_)
@@ -32,8 +32,9 @@ Scene::Scene(Vulkan::CommandPool& commandPool, std::vector<ModelInstance>&& mode
 		const auto indexOffset = static_cast<uint32_t>(indices.size());
 		const auto vertexOffset = static_cast<uint32_t>(vertices.size());
 		const auto materialOffset = static_cast<uint32_t>(materials.size());
+		const auto proceduralOffset = static_cast<uint32_t>(procedurals.size());
 
-		offsets.emplace_back(indexOffset, vertexOffset);
+		offsets.emplace_back(glm::uvec4(indexOffset, vertexOffset, proceduralOffset, 0));
 
 		// Copy model data one after the other.
 		vertices.insert(vertices.end(), model.Vertices().begin(), model.Vertices().end());
@@ -53,20 +54,20 @@ Scene::Scene(Vulkan::CommandPool& commandPool, std::vector<ModelInstance>&& mode
 		{
 			const auto aabb = sphere->BoundingBox();
 			aabbs.push_back({aabb.first.x, aabb.first.y, aabb.first.z, aabb.second.x, aabb.second.y, aabb.second.z});
-			procedurals.emplace_back(sphere->Center, sphere->Radius);
+			procedurals.emplace_back(glm::vec4(sphere->Center, sphere->Radius));
 		}
 		else if (sphereGroup != nullptr) {
 			for (size_t i = 0; i < sphereGroup->NumBoundingBoxes(); ++i) {
 				const auto aabb = sphereGroup->BoundingBox(i);
 				aabbs.push_back({ aabb.first.x, aabb.first.y, aabb.first.z, aabb.second.x, aabb.second.y, aabb.second.z });
 				// ???
-				procedurals.emplace_back(sphereGroup->centers[i], sphereGroup->radii[i]);
+				procedurals.emplace_back(glm::vec4(sphereGroup->centers[i], sphereGroup->radii[i]));
 			}
 		}
 		else
 		{
 			aabbs.emplace_back();
-			procedurals.emplace_back();
+			procedurals.emplace_back(glm::vec4(0,0,0,0));
 		}
 	}
 

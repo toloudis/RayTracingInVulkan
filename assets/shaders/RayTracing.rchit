@@ -7,7 +7,7 @@
 layout(binding = 4) readonly buffer VertexArray { float Vertices[]; };
 layout(binding = 5) readonly buffer IndexArray { uint Indices[]; };
 layout(binding = 6) readonly buffer MaterialArray { Material[] Materials; };
-layout(binding = 7) readonly buffer OffsetArray { uvec2[] Offsets; };
+layout(binding = 7) readonly buffer OffsetArray { uvec4[] Offsets; };
 layout(binding = 8) uniform sampler2D[] TextureSamplers;
 
 #include "Scatter.glsl"
@@ -29,7 +29,7 @@ vec3 Mix(vec3 a, vec3 b, vec3 c, vec3 barycentrics)
 void main()
 {
 	// Get the material.
-	const uvec2 offsets = Offsets[gl_InstanceCustomIndexEXT];
+	const uvec4 offsets = Offsets[gl_InstanceCustomIndexEXT];
 	const uint indexOffset = offsets.x;
 	const uint vertexOffset = offsets.y;
 	const Vertex v0 = UnpackVertex(vertexOffset + Indices[indexOffset + gl_PrimitiveID * 3 + 0]);
