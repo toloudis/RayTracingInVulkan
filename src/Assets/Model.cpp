@@ -323,11 +323,6 @@ Model Model::CreateSphere(const vec3& center, float radius, const Material& mate
 
 	makeSphereMesh(vertices, indices, center, radius, slices, stacks);
 
-	//vertices.push_back(Vertex{ center, glm::vec3(0,0,1), glm::vec2(0,0), 0 });
-	//indices.push_back(0);
-	//indices.push_back(0);
-	//indices.push_back(0);
-
 	std::vector<glm::vec3> centers{ center };
 	std::vector<float> radii{ radius };
 	return Model(
@@ -339,17 +334,17 @@ Model Model::CreateSphere(const vec3& center, float radius, const Material& mate
 
 Model Model::CreateSphereGroup(const std::vector<glm::vec3>& center, const std::vector<float>& radius, const Material& material, bool isProcedural, const std::string& name)
 {
-	// todo establish verts and inds for rasteriser representation
+	// little tiny spheres for mesh geometry.
+	// this is still too much and we should instance individual spheres or do the billboarded POINTS version
+	const int slices = 8;
+	const int stacks = 4;
+
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
-	// one single vertex per sphere
-	for (int i = 0; i < center.size(); ++i) {
-		vertices.push_back(Vertex{ center[i], glm::vec3(0,0,1), glm::vec2(0,0), 0 });
-	}
-	indices.push_back(0);
-	indices.push_back(0);
-	indices.push_back(0);
 
+	for (int i = 0; i < center.size(); ++i) {
+		makeSphereMesh(vertices, indices, center[i], radius[i], slices, stacks);
+	}
 
 	return Model(std::move(vertices), std::move(indices),
 		std::vector<Material>{material},
