@@ -461,7 +461,7 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 
 	std::cout << "NSPHERES " << nSpheres << std::endl;
 
-	auto domelight = Model::CreateSphere(vec3(0, 0, 0), volumeSize*1.7, Material::DiffuseLight(vec3(0.5f, 0.5f, 0.5f)), true);
+	auto domelight = Model::CreateSphere(vec3(0, 0, 0), volumeSize*10, Material::DiffuseLight(vec3(0.5f, 0.5f, 0.5f)), true);
 	models.push_back(domelight);
 	modelInstances.push_back(ModelInstance(&models[models.size()-1]));
 
