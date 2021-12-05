@@ -16,6 +16,7 @@ namespace Assets {
 #define MAX_CHAR_ATOM_NAME 4
 #define MAX_CHAR_RES_NAME 4
 #define MAX_CHAR_CHAIN_ID 4
+#define MAX_CHAR_ENTITY_ID 4
 	struct Atom
 	{
 		Atom() {
@@ -25,11 +26,14 @@ namespace Assets {
 			memset(atom_name, 0, MAX_CHAR_ATOM_NAME);
 			memset(residue_name, 0, MAX_CHAR_RES_NAME);
 			memset(chain_id, 0, MAX_CHAR_CHAIN_ID);
+			memset(entity_id, 0, MAX_CHAR_ENTITY_ID);
 		}
 		char element;
 		char atom_name[MAX_CHAR_ATOM_NAME];
 		char residue_name[MAX_CHAR_RES_NAME];
+		// this is the label_asym_id
 		char chain_id[MAX_CHAR_CHAIN_ID];
+		char entity_id[MAX_CHAR_ENTITY_ID];
 		int residue_num;
 		float x, y, z;
 	};
@@ -82,6 +86,13 @@ namespace Assets {
 				[&atom](const char* start) {
 					atom.residue_num = readcif::str_to_int(start);
 				});
+			pv.emplace_back(get_column("label_entity_id"),
+				[&atom](const char* start, const char* end) {
+					size_t count = end - start;
+					if (count > MAX_CHAR_ENTITY_ID)
+						count = MAX_CHAR_ENTITY_ID;
+					strncpy(atom.entity_id, start, count);
+				});
 			// x, y, z are not required by mmCIF, but are by us
 			pv.emplace_back(get_column("Cartn_x", Required),
 				[&atom](const char* start) {
@@ -101,7 +112,34 @@ namespace Assets {
 			}
 		}
 
+		void build_entities() {
+			for (const Atom& atom : atoms) {
+				//danger this string conversion is super inefficient here.
+				std::string entity_id = atom.entity_id; 
+				if (entities.find(entity_id) != entities.end()) {
+					// add to existing
+					entities[entity_id].push_back(&atom);
+				}
+				else {
+					// first one
+					entities[entity_id] = { &atom };
+				}
+
+				std::string chain_id = atom.chain_id;
+				if (chains.find(chain_id) != chains.end()) {
+					// add to existing
+					chains[chain_id].push_back(&atom);
+				}
+				else {
+					// first one
+					chains[chain_id] = { &atom };
+				}
+			}
+		}
+
 		std::vector<Atom> atoms;
+		std::unordered_map<std::string, std::vector<const Atom*>> entities;
+		std::unordered_map<std::string, std::vector<const Atom*>> chains;
 	};
 
 	void LoadCIFAsScene(const std::string& filename, std::vector<Model>& models, std::vector<ModelInstance>& modelInstances)
@@ -117,6 +155,7 @@ namespace Assets {
 
 		try {
 			extract.parse_file(filename.c_str());
+			extract.build_entities();
 		}
 		catch (std::exception& e) {
 			std::cerr << e.what() << '\n';
@@ -150,6 +189,8 @@ namespace Assets {
 
 		try {
 			extract.parse_file(filename.c_str());
+			extract.build_entities();
+
 		}
 		catch (std::exception& e) {
 			std::cerr << e.what() << '\n';
