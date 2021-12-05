@@ -6,6 +6,7 @@
 #include <glm/gtx/hash.hpp>
 
 #include <chrono>
+#include <cstring>
 #include <filesystem>
 #include <iostream>
 
