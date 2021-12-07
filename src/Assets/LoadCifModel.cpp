@@ -2,6 +2,7 @@
 #include "readcif.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtx/hash.hpp>
 
@@ -9,6 +10,8 @@
 #include <cstring>
 #include <filesystem>
 #include <iostream>
+#include <regex>
+#include <sstream>
 
 using namespace glm;
 
@@ -40,6 +43,115 @@ namespace Assets {
 
 	static const bool Required = true;
 
+
+	std::vector<std::string> split(const std::string& s, char delimiter)
+	{
+		std::vector<std::string> tokens;
+		std::string token;
+		std::istringstream tokenStream(s);
+		while (std::getline(tokenStream, token, delimiter))
+		{
+			tokens.push_back(token);
+		}
+		return tokens;
+	}
+
+	std::vector<std::vector<std::string>> parseOperatorList(const std::string& value) {
+		// (a)
+		// (1-5)
+		// (1-5)(1-5)
+		// 
+		// '(X0)(1-5)' becomes [['X0'], ['1', '2', '3', '4', '5']]
+		// kudos to Glen van Ginkel.
+		std::vector<std::string> groups;
+		std::vector<std::vector<std::string>> ret;
+
+		//std::regex reg("\\(? ([^ \\(\\)] + )\\) ? ] *", std::regex_constants::ECMAScript);
+		//const oeRegex = / \(? ([^ \(\)] + )\) ? ] * / g;
+		std::regex oeRegex("\\(?([^\\(\\)]+)\\)?",
+			std::regex_constants::ECMAScript);
+		std::smatch match;
+		std::regex_match(value, match, oeRegex);
+		if (!match.empty()) {
+			for (unsigned i = 1; i < match.size(); ++i) {
+				groups.push_back(match.str(i));
+			}
+		}
+	
+		for (auto g : groups) {
+			std::vector<std::string> group;
+			std::vector<std::string> splitted = split(g, ',');
+			for (auto e : splitted) {
+				std::string::size_type dashIndex = e.find("-", 0);
+				if (dashIndex != std::string::npos) {
+					// dash means we have integer ranges?
+					std::string sfrom = e.substr(0, dashIndex);
+					std::string sto = e.substr(dashIndex + 1);
+					int from = std::stoi(sfrom);
+					int to = std::stoi(sto);
+					for (int i = from; i <= to; ++i) {
+						group.push_back(std::to_string(i));
+					}
+				}
+				else {
+					group.push_back(e);
+				}
+
+			}
+			ret.push_back(group);
+		}
+
+		return ret;
+	}
+
+#if 0
+		let g : any;
+		while (g = oeRegex.exec(value)) groups[groups.length] = g[1];
+
+		groups.forEach(g = > {
+			const group : string[] = [];
+			g.split(',').forEach(e = > {
+				const dashIndex = e.indexOf('-');
+				if (dashIndex > 0) {
+					const from = parseInt(e.substring(0, dashIndex)), to = parseInt(e.substr(dashIndex + 1));
+					for (let i = from; i <= to; i++) group[group.length] = i.toString();
+				}
+	 else {
+	  group[group.length] = e.trim();
+  }
+});
+ret[ret.length] = group;
+});
+
+return ret;
+	}
+
+		function expandOperators(operatorList: string[][]) {
+		const ops : string[][] = [];
+		const currentOp : string[] = [];
+		for (let i = 0; i < operatorList.length; i++) currentOp[i] = '';
+		expandOperators1(operatorList, ops, operatorList.length - 1, currentOp);
+		return ops;
+	}
+
+	function expandOperators1(operatorNames: string[][], list : string[][], i : number, current : string[]) {
+		if (i < 0) {
+			list[list.length] = current.slice(0);
+			return;
+		}
+
+		let ops = operatorNames[i], len = ops.length;
+		for (let j = 0; j < len; j++) {
+			current[i] = ops[j];
+			expandOperators1(operatorNames, list, i - 1, current);
+		}
+	}
+
+	//[In]
+	console.log(expandOperators(parseOperatorList("(X0)(1-4)")));
+	//[Out]
+	[[ "X0", "1" ], ["X0", "2"], ["X0", "3"], ["X0", "4"]]
+#endif
 	struct ExtractCIF : readcif::CIFFile {
 		ExtractCIF()
 		{
@@ -51,11 +163,125 @@ namespace Assets {
 				[this]() {
 					parse_atom_site();
 				});
+			register_category("pdbx_struct_oper_list",
+				[this]() {
+					parse_transform();
+				});
+			register_category("pdbx_struct_assembly_gen",
+				[this]() {
+					parse_assemblies();
+				});
+		}
+
+		void parse_assemblies() {
+//			_pdbx_struct_assembly_gen.assembly_id
+	//			_pdbx_struct_assembly_gen.oper_expression
+		//		_pdbx_struct_assembly_gen.asym_id_list
+			readcif::CIFFile::ParseValues pv;
+			pv.reserve(3);
+			std::string operExpr;
+			std::string assemblyId;
+			std::string asymIdList;
+			pv.emplace_back(get_column("assembly_id", Required),
+				[&assemblyId](const char* start, const char* end) {
+					size_t count = end - start;
+					assemblyId = std::string(start, count);
+				});
+			pv.emplace_back(get_column("oper_expression", Required),
+				[&operExpr](const char* start, const char* end) {
+					size_t count = end - start;
+					operExpr = std::string(start, count);
+				});
+			pv.emplace_back(get_column("asym_id_list", Required),
+				[&asymIdList](const char* start, const char* end) {
+					size_t count = end - start;
+					asymIdList = std::string(start, count);
+				});
+
+			while (parse_row(pv)) {
+				parseOperatorList(operExpr);
+				if (assemblies.find(assemblyId) != assemblies.end()) {
+					// add to existing
+					assemblies[assemblyId].push_back({ {asymIdList, operExpr} });
+				}
+				else {
+					// first one
+					assemblies[assemblyId] = { {{asymIdList, operExpr}} };
+				}
+			}
+
+
+		}
+		void parse_transform()
+		{
+			readcif::CIFFile::ParseValues pv;
+			pv.reserve(16);
+			glm::mat4 m(1.0f);
+			std::string id;
+			pv.emplace_back(get_column("id", Required),
+				[&id](const char* start, const char* end) {
+					size_t count = end - start;
+					id = std::string(start, count);
+				});
+			pv.emplace_back(get_column("matrix[1][1]", Required),
+				[&m](const char* start) {
+					m[0][0] = (float)readcif::str_to_float(start);
+				});
+			pv.emplace_back(get_column("matrix[1][2]", Required),
+				[&m](const char* start) {
+					m[0][1] = (float)readcif::str_to_float(start);
+				});
+			pv.emplace_back(get_column("matrix[1][3]", Required),
+				[&m](const char* start) {
+					m[0][2] = (float)readcif::str_to_float(start);
+				});
+			pv.emplace_back(get_column("vector[1]", Required),
+				[&m](const char* start) {
+					m[0][3] = (float)readcif::str_to_float(start);
+				});
+			pv.emplace_back(get_column("matrix[2][1]", Required),
+				[&m](const char* start) {
+					m[1][0] = (float)readcif::str_to_float(start);
+				});
+			pv.emplace_back(get_column("matrix[2][2]", Required),
+				[&m](const char* start) {
+					m[1][1] = (float)readcif::str_to_float(start);
+				});
+			pv.emplace_back(get_column("matrix[2][3]", Required),
+				[&m](const char* start) {
+					m[1][2] = (float)readcif::str_to_float(start);
+				});
+			pv.emplace_back(get_column("vector[2]", Required),
+				[&m](const char* start) {
+					m[1][3] = (float)readcif::str_to_float(start);
+				});
+			pv.emplace_back(get_column("matrix[3][1]", Required),
+				[&m](const char* start) {
+					m[2][0] = (float)readcif::str_to_float(start);
+				});
+			pv.emplace_back(get_column("matrix[3][2]", Required),
+				[&m](const char* start) {
+					m[2][1] = (float)readcif::str_to_float(start);
+				});
+			pv.emplace_back(get_column("matrix[3][3]", Required),
+				[&m](const char* start) {
+					m[2][2] = (float)readcif::str_to_float(start);
+				});
+			pv.emplace_back(get_column("vector[3]", Required),
+				[&m](const char* start) {
+					m[2][3] = (float)readcif::str_to_float(start);
+				});
+
+			while (parse_row(pv)) {
+				transforms[id] = m;
+				m = glm::mat4(1.0f);
+			}
+
 		}
 		void parse_atom_site()
 		{
 			readcif::CIFFile::ParseValues pv;
-			pv.reserve(10);
+			pv.reserve(11);
 			Atom atom;
 			pv.emplace_back(get_column("type_symbol", Required),
 				[&atom](const char* start) {
@@ -140,6 +366,11 @@ namespace Assets {
 		std::vector<Atom> atoms;
 		std::unordered_map<std::string, std::vector<const Atom*>> entities;
 		std::unordered_map<std::string, std::vector<const Atom*>> chains;
+		std::unordered_map<std::string, glm::mat4> transforms;
+		// each assembly has a list of asym units
+		// and each asym unit has a list of ops
+		using AsymToOp = std::unordered_map<std::string, std::string>;
+		std::unordered_map<std::string, std::vector<AsymToOp>> assemblies;
 	};
 
 	void LoadCIFAsScene(const std::string& filename, std::vector<Model>& models, std::vector<ModelInstance>& modelInstances)
