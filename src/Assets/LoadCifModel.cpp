@@ -199,14 +199,20 @@ return ret;
 				});
 
 			while (parse_row(pv)) {
-				parseOperatorList(operExpr);
-				if (assemblies.find(assemblyId) != assemblies.end()) {
-					// add to existing
-					assemblies[assemblyId].push_back({ {asymIdList, operExpr} });
+				std::vector<std::vector<std::string>> operators = parseOperatorList(operExpr);
+				if (!operators.empty()) {
+					if (assemblies.find(assemblyId) != assemblies.end()) {
+						// add to existing
+						assemblies[assemblyId].push_back({ {asymIdList, operators[0]} });
+					}
+					else {
+						// first one
+						assemblies[assemblyId] = { {{asymIdList, operators[0]}} };
+					}
+
 				}
 				else {
-					// first one
-					assemblies[assemblyId] = { {{asymIdList, operExpr}} };
+					// ERROR???
 				}
 			}
 
@@ -369,7 +375,7 @@ return ret;
 		std::unordered_map<std::string, glm::mat4> transforms;
 		// each assembly has a list of asym units
 		// and each asym unit has a list of ops
-		using AsymToOp = std::unordered_map<std::string, std::string>;
+		using AsymToOp = std::unordered_map<std::string, std::vector<std::string>>;
 		std::unordered_map<std::string, std::vector<AsymToOp>> assemblies;
 	};
 
@@ -379,8 +385,6 @@ return ret;
 		const auto timer = std::chrono::high_resolution_clock::now();
 		const std::string materialPath = std::filesystem::path(filename).parent_path().string();
 
-		std::vector<glm::vec3> vertices;
-		std::vector<float> radii;
 
 		ExtractCIF extract;
 
@@ -392,19 +396,52 @@ return ret;
 			std::cerr << e.what() << '\n';
 		}
 
-		size_t n = extract.atoms.size();
-		std::cout << n << " atoms\n";
-		for (size_t i = 0; i < n; ++i) {
-			Atom& a = extract.atoms[i];
-			vertices.push_back(glm::vec3(a.x, a.y, a.z));
-			radii.push_back(1.0f);
+		std::vector<Model> newModels;
+		size_t nEntities = extract.entities.size();
+		if (nEntities > 0) {
+			for (auto e : extract.entities) {
+				size_t n = e.second.size();
+				std::cout << "Entity " << e.first << " has " << n << " atoms\n";
+				std::vector<glm::vec3> vertices;
+				std::vector<float> radii;
+				for (size_t i = 0; i < n; ++i) {
+					const Atom* a = e.second[i];
+					vertices.push_back(glm::vec3(a->x, a->y, a->z));
+					radii.push_back(1.0f);
+				}
+				newModels.push_back(Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(glm::vec3(0.75, 0, 0.75)), true, filename + " :: " + e.first));
+			}
+
+			// now look for instances as assembly.
+			size_t nAssemblies = extract.assemblies.size();
+			if (nAssemblies > 0) {
+
+			}
+			else {
+				for (const Model& m : newModels) {
+					modelInstances.push_back(ModelInstance(&models[models.size() - 1]));
+				}
+
+			}
+
+		}
+		else {
+			std::vector<glm::vec3> vertices;
+			std::vector<float> radii;
+			size_t n = extract.atoms.size();
+			std::cout << n << " atoms\n";
+			for (size_t i = 0; i < n; ++i) {
+				Atom& a = extract.atoms[i];
+				vertices.push_back(glm::vec3(a.x, a.y, a.z));
+				radii.push_back(1.0f);
+			}
+			models.push_back(Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(glm::vec3(0.75, 0, 0.75)), true, filename));
 		}
 
 		const auto elapsed = std::chrono::duration<float, std::chrono::seconds::period>(std::chrono::high_resolution_clock::now() - timer).count();
 
 		std::cout << elapsed << "s" << std::endl;
 
-		models.push_back(Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(glm::vec3(0.75, 0, 0.75)), true, filename));
 		modelInstances.push_back(ModelInstance(&models[models.size()-1]));
 	}
 
