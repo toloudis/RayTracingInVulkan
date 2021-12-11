@@ -12,7 +12,7 @@
 
 namespace Assets {
 
-Scene::Scene(Vulkan::CommandPool& commandPool, std::vector<ModelInstance>&& modelInstances, std::vector<Model>&& models, std::vector<Texture>&& textures) :
+Scene::Scene(Vulkan::CommandPool& commandPool, std::vector<ModelInstance>&& modelInstances, std::vector<std::unique_ptr<Model>>&& models, std::vector<Texture>&& textures) :
 	modelInstances_(std::move(modelInstances)),
 	models_(std::move(models)),
 	textures_(std::move(textures))
@@ -37,9 +37,9 @@ Scene::Scene(Vulkan::CommandPool& commandPool, std::vector<ModelInstance>&& mode
 		offsets.emplace_back(glm::uvec4(indexOffset, vertexOffset, proceduralOffset, 0));
 
 		// Copy model data one after the other.
-		vertices.insert(vertices.end(), model.Vertices().begin(), model.Vertices().end());
-		indices.insert(indices.end(), model.Indices().begin(), model.Indices().end());
-		materials.insert(materials.end(), model.Materials().begin(), model.Materials().end());
+		vertices.insert(vertices.end(), model->Vertices().begin(), model->Vertices().end());
+		indices.insert(indices.end(), model->Indices().begin(), model->Indices().end());
+		materials.insert(materials.end(), model->Materials().begin(), model->Materials().end());
 
 		// Adjust the material id.
 		for (size_t i = vertexOffset; i != vertices.size(); ++i)
@@ -48,8 +48,8 @@ Scene::Scene(Vulkan::CommandPool& commandPool, std::vector<ModelInstance>&& mode
 		}
 
 		// Add optional procedurals.
-		const auto* const sphere = dynamic_cast<const Sphere*>(model.Procedural());
-		const auto* const sphereGroup = dynamic_cast<const SphereGroup*>(model.Procedural());
+		const auto* const sphere = dynamic_cast<const Sphere*>(model->Procedural());
+		const auto* const sphereGroup = dynamic_cast<const SphereGroup*>(model->Procedural());
 		if (sphere != nullptr)
 		{
 			const auto aabb = sphere->BoundingBox();
@@ -117,7 +117,7 @@ Scene::~Scene()
 int64_t Scene::indexOf(const Model* m) const {
 	// get index of model to find the bottom level AS for it.
 	auto it = std::find_if(models_.begin(), models_.end(),
-		[m](const Model& p) { return &p == m; });
+		[m](const std::unique_ptr<Model>& p) { return p.get() == m; });
 	// If element was found
 	if (it != models_.end())
 	{

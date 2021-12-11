@@ -379,7 +379,7 @@ return ret;
 		std::unordered_map<std::string, std::vector<AsymToOp>> assemblies;
 	};
 
-	void LoadCIFAsScene(const std::string& filename, std::vector<Model>& models, std::vector<ModelInstance>& modelInstances)
+	void LoadCIFAsScene(const std::string& filename, std::vector<std::unique_ptr<Model>>& models, std::vector<ModelInstance>& modelInstances)
 	{
 		std::cout << "- loading '" << filename << "'... " << std::flush;
 		const auto timer = std::chrono::high_resolution_clock::now();
@@ -396,7 +396,7 @@ return ret;
 			std::cerr << e.what() << '\n';
 		}
 
-		std::vector<Model> newModels;
+		std::vector<std::unique_ptr<Model>> newModels;
 		size_t nEntities = extract.entities.size();
 		if (nEntities > 0) {
 			for (auto e : extract.entities) {
@@ -409,7 +409,8 @@ return ret;
 					vertices.push_back(glm::vec3(a->x, a->y, a->z));
 					radii.push_back(1.0f);
 				}
-				newModels.push_back(Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(glm::vec3(0.75, 0, 0.75)), true, filename + " :: " + e.first));
+				auto model = Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(glm::vec3(0.75, 0, 0.75)), true, filename + " :: " + e.first);
+				newModels.push_back(std::make_unique<Model>(model));
 			}
 
 			// now look for instances as assembly.
@@ -418,8 +419,8 @@ return ret;
 
 			}
 			else {
-				for (const Model& m : newModels) {
-					modelInstances.push_back(ModelInstance(&models[models.size() - 1]));
+				for (auto& m : newModels) {
+					modelInstances.push_back(ModelInstance(m.get()));
 				}
 
 			}
@@ -435,17 +436,17 @@ return ret;
 				vertices.push_back(glm::vec3(a.x, a.y, a.z));
 				radii.push_back(1.0f);
 			}
-			models.push_back(Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(glm::vec3(0.75, 0, 0.75)), true, filename));
+			models.push_back(std::make_unique<Model>(Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(glm::vec3(0.75, 0, 0.75)), true, filename)));
 		}
 
 		const auto elapsed = std::chrono::duration<float, std::chrono::seconds::period>(std::chrono::high_resolution_clock::now() - timer).count();
 
 		std::cout << elapsed << "s" << std::endl;
 
-		modelInstances.push_back(ModelInstance(&models[models.size()-1]));
+		modelInstances.push_back(ModelInstance(models[models.size()-1].get()));
 	}
 
-	Model LoadCIF(const std::string& filename, const Material& material) {
+	Model* LoadCIF(const std::string& filename, const Material& material) {
 		std::cout << "- loading '" << filename << "'... " << std::flush;
 		const auto timer = std::chrono::high_resolution_clock::now();
 		const std::string materialPath = std::filesystem::path(filename).parent_path().string();

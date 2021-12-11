@@ -13,12 +13,12 @@ namespace Assets
 	{
 	public:
 
-		static Model LoadModel(const std::string& filename);
-		static Model CreateCornellBox(const float scale);
-		static Model CreateBox(const glm::vec3& p0, const glm::vec3& p1, const Material& material);
-		static Model CreateSphere(const glm::vec3& center, float radius, const Material& material, bool isProcedural, const std::string& name = "sphere'");
-		static Model CreateSphereGroup(const std::vector<glm::vec3>& center, const std::vector<float>& radius, const Material& material, bool isProcedural, const std::string& name);
-		static Model CreateRandomSphereGroup(int nSpheres, float groupRadius = 150.0f, float atomRadius = 2.0f, float atomRadiusMax = 2.0f, const std::string& name = "spheregroup");
+		static Model* LoadModel(const std::string& filename);
+		static Model* CreateCornellBox(const float scale);
+		static Model* CreateBox(const glm::vec3& p0, const glm::vec3& p1, const Material& material);
+		static Model* CreateSphere(const glm::vec3& center, float radius, const Material& material, bool isProcedural, const std::string& name = "sphere'");
+		static Model* CreateSphereGroup(const std::vector<glm::vec3>& center, const std::vector<float>& radius, const Material& material, bool isProcedural, const std::string& name);
+		static Model* CreateRandomSphereGroup(int nSpheres, float groupRadius = 150.0f, float atomRadius = 2.0f, float atomRadiusMax = 2.0f, const std::string& name = "spheregroup");
 
 		Model& operator = (const Model&) = delete;
 		Model& operator = (Model&&) = delete;

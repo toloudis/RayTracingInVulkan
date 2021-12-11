@@ -29,10 +29,10 @@ namespace Assets
 		Scene& operator = (const Scene&) = delete;
 		Scene& operator = (Scene&&) = delete;
 
-		Scene(Vulkan::CommandPool& commandPool, std::vector<ModelInstance>&& modelInstances, std::vector<Model>&& models, std::vector<Texture>&& textures);
+		Scene(Vulkan::CommandPool& commandPool, std::vector<ModelInstance>&& modelInstances, std::vector<std::unique_ptr<Model>>&& models, std::vector<Texture>&& textures);
 		~Scene();
 
-		const std::vector<Model>& Models() const { return models_; }
+		const std::vector<std::unique_ptr<Model>>& Models() const { return models_; }
 		int64_t indexOf(const Model* m) const;
 
 		const std::vector<ModelInstance>& ModelInstances() const { return modelInstances_; }
@@ -49,7 +49,7 @@ namespace Assets
 
 	private:
 		const std::vector<ModelInstance> modelInstances_;
-		const std::vector<Model> models_;
+		const std::vector<std::unique_ptr<Model>> models_;
 		const std::vector<Texture> textures_;
 
 		std::unique_ptr<Vulkan::Buffer> vertexBuffer_;

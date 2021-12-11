@@ -42,7 +42,7 @@ namespace std
 }
 
 namespace Assets {
-	Model Model::CreateRandomSphereGroup(int nSpheres, float groupRadius, float atomRadius, float atomRadiusMax, const std::string& name) {
+	Model* Model::CreateRandomSphereGroup(int nSpheres, float groupRadius, float atomRadius, float atomRadiusMax, const std::string& name) {
 		// create a random sphere group of spheres "close" to each other
 		std::vector<glm::vec3> v;
 		std::vector<float> r;
@@ -53,7 +53,7 @@ namespace Assets {
 		return Model::CreateSphereGroup(v, r, Material::Lambertian(vec3(0.7f, 0.7f, 0.7f)), true, name);
 	}
 
-Model Model::LoadModel(const std::string& filename)
+Model* Model::LoadModel(const std::string& filename)
 {
 	std::cout << "- loading '" << filename << "'... " << std::flush;
 
@@ -181,10 +181,10 @@ Model Model::LoadModel(const std::string& filename)
 	std::cout << "(" << objAttrib.vertices.size() << " vertices, " << uniqueVertices.size() << " unique vertices, " << materials.size() << " materials) ";
 	std::cout << elapsed << "s" << std::endl;
 
-	return Model(std::move(vertices), std::move(indices), std::move(materials), nullptr, filename);
+	return new Model(std::move(vertices), std::move(indices), std::move(materials), nullptr, filename);
 }
 
-Model Model::CreateCornellBox(const float scale)
+Model* Model::CreateCornellBox(const float scale)
 {
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
@@ -192,7 +192,7 @@ Model Model::CreateCornellBox(const float scale)
 
 	CornellBox::Create(scale, vertices, indices, materials);
 
-	return Model(
+	return new Model(
 		std::move(vertices),
 		std::move(indices),
 		std::move(materials),
@@ -201,7 +201,7 @@ Model Model::CreateCornellBox(const float scale)
 	);
 }
 
-Model Model::CreateBox(const vec3& p0, const vec3& p1, const Material& material)
+Model* Model::CreateBox(const vec3& p0, const vec3& p1, const Material& material)
 {
 	std::vector<Vertex> vertices =
 	{
@@ -246,7 +246,7 @@ Model Model::CreateBox(const vec3& p0, const vec3& p1, const Material& material)
 		20, 21, 22, 20, 22, 23
 	};
 
-	return Model(
+	return new Model(
 		std::move(vertices),
 		std::move(indices),
 		std::vector<Material>{material},
@@ -313,7 +313,7 @@ static void makeSphereMesh(std::vector<Vertex>& vertices, std::vector<uint32_t>&
 
 }
 
-Model Model::CreateSphere(const vec3& center, float radius, const Material& material, const bool isProcedural, const std::string& name)
+Model* Model::CreateSphere(const vec3& center, float radius, const Material& material, const bool isProcedural, const std::string& name)
 {
 	const int slices = 32;
 	const int stacks = 16;
@@ -325,14 +325,14 @@ Model Model::CreateSphere(const vec3& center, float radius, const Material& mate
 
 	std::vector<glm::vec3> centers{ center };
 	std::vector<float> radii{ radius };
-	return Model(
+	return new Model(
 		std::move(vertices),
 		std::move(indices),
 		std::vector<Material>{material},
 		isProcedural ? new SphereGroup(centers, radii) : nullptr, name);
 }
 
-Model Model::CreateSphereGroup(const std::vector<glm::vec3>& center, const std::vector<float>& radius, const Material& material, bool isProcedural, const std::string& name)
+Model* Model::CreateSphereGroup(const std::vector<glm::vec3>& center, const std::vector<float>& radius, const Material& material, bool isProcedural, const std::string& name)
 {
 	// little tiny spheres for mesh geometry.
 	// this is still too much and we should instance individual spheres or do the billboarded POINTS version
@@ -346,7 +346,7 @@ Model Model::CreateSphereGroup(const std::vector<glm::vec3>& center, const std::
 		makeSphereMesh(vertices, indices, center[i], radius[i], slices, stacks);
 	}
 
-	return Model(std::move(vertices), std::move(indices),
+	return new Model(std::move(vertices), std::move(indices),
 		std::vector<Material>{material},
 	    new SphereGroup(center, radius), name);
 }
