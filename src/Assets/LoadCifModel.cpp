@@ -410,7 +410,7 @@ return ret;
 					radii.push_back(1.0f);
 				}
 				auto model = Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(glm::vec3(0.75, 0, 0.75)), true, filename + " :: " + e.first);
-				newModels.push_back(std::make_unique<Model>(model));
+				newModels.push_back(std::unique_ptr<Model>(model));
 			}
 
 			// now look for instances as assembly.
@@ -436,7 +436,7 @@ return ret;
 				vertices.push_back(glm::vec3(a.x, a.y, a.z));
 				radii.push_back(1.0f);
 			}
-			models.push_back(std::make_unique<Model>(Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(glm::vec3(0.75, 0, 0.75)), true, filename)));
+			models.push_back(std::unique_ptr<Model>(Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(glm::vec3(0.75, 0, 0.75)), true, filename)));
 		}
 
 		const auto elapsed = std::chrono::duration<float, std::chrono::seconds::period>(std::chrono::high_resolution_clock::now() - timer).count();

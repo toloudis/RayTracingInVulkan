@@ -250,12 +250,12 @@ void Application::CreateBottomLevelStructures(VkCommandBuffer commandBuffer)
 
 	for (const auto& model : scene.Models())
 	{
-		const auto vertexCount = static_cast<uint32_t>(model.NumberOfVertices());
-		const auto indexCount = static_cast<uint32_t>(model.NumberOfIndices());
+		const auto vertexCount = static_cast<uint32_t>(model->NumberOfVertices());
+		const auto indexCount = static_cast<uint32_t>(model->NumberOfIndices());
 		BottomLevelGeometry geometries;
 		
-		model.Procedural()
-			? geometries.AddGeometryAabb(scene, aabbOffset, (uint32_t)model.Procedural()->NumBoundingBoxes(), true)
+		model->Procedural()
+			? geometries.AddGeometryAabb(scene, aabbOffset, (uint32_t)model->Procedural()->NumBoundingBoxes(), true)
 			: geometries.AddGeometryTriangles(scene, vertexOffset, vertexCount, indexOffset, indexCount, true);
 
 		// one per model?  how would we instance a model??
@@ -263,7 +263,7 @@ void Application::CreateBottomLevelStructures(VkCommandBuffer commandBuffer)
 
 		vertexOffset += vertexCount * sizeof(Assets::Vertex);
 		indexOffset += indexCount * sizeof(uint32_t);
-		aabbOffset += model.Procedural() ? (uint32_t) (model.Procedural()->NumBoundingBoxes()*sizeof(VkAabbPositionsKHR)) : sizeof(VkAabbPositionsKHR);
+		aabbOffset += model->Procedural() ? (uint32_t) (model->Procedural()->NumBoundingBoxes()*sizeof(VkAabbPositionsKHR)) : sizeof(VkAabbPositionsKHR);
 	}
 
 	// Allocate the structures memory.

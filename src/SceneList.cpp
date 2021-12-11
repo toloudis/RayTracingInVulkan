@@ -45,10 +45,10 @@ SceneAssets SceneList::CubeAndSpheres(CameraInitialSate& camera)
 	std::vector<std::unique_ptr<Model>> models;
 	std::vector<Texture> textures;
 
-	models.push_back(std::make_unique<Model>(Model::LoadModel("../assets/models/cube_multi.obj")));
-	models.push_back(std::make_unique<Model>(Model::CreateSphere(vec3(1, 0, 0), 0.5, Material::Metallic(vec3(0.7f, 0.5f, 0.8f), 0.2f), true)));
-	models.push_back(std::make_unique<Model>(Model::CreateSphere(vec3(-1, 0, 0), 0.5, Material::Dielectric(1.5f), true)));
-	models.push_back(std::make_unique<Model>(Model::CreateSphere(vec3(0, 1, 0), 0.5, Material::Lambertian(vec3(1.0f), 0), true)));
+	models.push_back(std::unique_ptr<Model>(Model::LoadModel("../assets/models/cube_multi.obj")));
+	models.push_back(std::unique_ptr<Model>(Model::CreateSphere(vec3(1, 0, 0), 0.5, Material::Metallic(vec3(0.7f, 0.5f, 0.8f), 0.2f), true)));
+	models.push_back(std::unique_ptr<Model>(Model::CreateSphere(vec3(-1, 0, 0), 0.5, Material::Dielectric(1.5f), true)));
+	models.push_back(std::unique_ptr<Model>(Model::CreateSphere(vec3(0, 1, 0), 0.5, Material::Lambertian(vec3(1.0f), 0), true)));
 
 	textures.push_back(Texture::LoadTexture("../assets/textures/land_ocean_ice_cloud_2048.png", Vulkan::SamplerConfig()));
 
@@ -80,7 +80,7 @@ SceneAssets SceneList::RayTracingInOneWeekend(CameraInitialSate& camera)
 
 	std::vector<std::unique_ptr<Model>> models;
 
-	models.push_back(std::make_unique<Model>(Model::CreateSphere(vec3(0, -1000, 0), 1000, Material::Lambertian(vec3(0.5f, 0.5f, 0.5f)), isProc)));
+	models.push_back(std::unique_ptr<Model>(Model::CreateSphere(vec3(0, -1000, 0), 1000, Material::Lambertian(vec3(0.5f, 0.5f, 0.5f)), isProc)));
 
 	for (int a = -11; a < 11; ++a)
 	{
@@ -93,7 +93,7 @@ SceneAssets SceneList::RayTracingInOneWeekend(CameraInitialSate& camera)
 			{
 				if (chooseMat < 0.8f) // Diffuse
 				{
-					models.push_back(std::make_unique<Model>(Model::CreateSphere(center, 0.2f, Material::Lambertian(vec3(
+					models.push_back(std::unique_ptr<Model>(Model::CreateSphere(center, 0.2f, Material::Lambertian(vec3(
 						random()*random(),
 						random()*random(),
 						random()*random())),
@@ -101,22 +101,22 @@ SceneAssets SceneList::RayTracingInOneWeekend(CameraInitialSate& camera)
 				}
 				else if (chooseMat < 0.95f) // Metal
 				{
-					models.push_back(std::make_unique<Model>(Model::CreateSphere(center, 0.2f, Material::Metallic(
+					models.push_back(std::unique_ptr<Model>(Model::CreateSphere(center, 0.2f, Material::Metallic(
 						vec3(0.5f*(1 + random()), 0.5f*(1 + random()), 0.5f*(1 + random())),
 						0.5f*random()),
 						isProc)));
 				}
 				else // Glass
 				{
-					models.push_back(std::make_unique<Model>(Model::CreateSphere(center, 0.2f, Material::Dielectric(1.5f), isProc)));
+					models.push_back(std::unique_ptr<Model>(Model::CreateSphere(center, 0.2f, Material::Dielectric(1.5f), isProc)));
 				}
 			}
 		}
 	}
 
-	models.push_back(std::make_unique<Model>(Model::CreateSphere(vec3(0, 1, 0), 1.0f, Material::Dielectric(1.5f), isProc)));
-	models.push_back(std::make_unique<Model>(Model::CreateSphere(vec3(-4, 1, 0), 1.0f, Material::Lambertian(vec3(0.4f, 0.2f, 0.1f)), isProc)));
-	models.push_back(std::make_unique<Model>(Model::CreateSphere(vec3(4, 1, 0), 1.0f, Material::Metallic(vec3(0.7f, 0.6f, 0.5f), 0.0f), isProc)));
+	models.push_back(std::unique_ptr<Model>(Model::CreateSphere(vec3(0, 1, 0), 1.0f, Material::Dielectric(1.5f), isProc)));
+	models.push_back(std::unique_ptr<Model>(Model::CreateSphere(vec3(-4, 1, 0), 1.0f, Material::Lambertian(vec3(0.4f, 0.2f, 0.1f)), isProc)));
+	models.push_back(std::unique_ptr<Model>(Model::CreateSphere(vec3(4, 1, 0), 1.0f, Material::Metallic(vec3(0.7f, 0.6f, 0.5f), 0.0f), isProc)));
 
 	// create an instance for each model:
 	std::vector<ModelInstance> modelInstances;
@@ -148,7 +148,7 @@ SceneAssets SceneList::PlanetsInOneWeekend(CameraInitialSate& camera)
 	std::vector<std::unique_ptr<Model>> models;
 	std::vector<Texture> textures;
 
-	models.push_back(std::make_unique<Model>(Model::CreateSphere(vec3(0, -1000, 0), 1000, Material::Lambertian(vec3(0.5f, 0.5f, 0.5f)), isProc)));
+	models.push_back(std::unique_ptr<Model>(Model::CreateSphere(vec3(0, -1000, 0), 1000, Material::Lambertian(vec3(0.5f, 0.5f, 0.5f)), isProc)));
 
 	for (int a = -11; a < 11; ++a)
 	{
@@ -161,7 +161,7 @@ SceneAssets SceneList::PlanetsInOneWeekend(CameraInitialSate& camera)
 			{
 				if (chooseMat < 0.8f) // Diffuse
 				{
-					models.push_back(std::make_unique<Model>(Model::CreateSphere(center, 0.2f, Material::Lambertian(vec3(
+					models.push_back(std::unique_ptr<Model>(Model::CreateSphere(center, 0.2f, Material::Lambertian(vec3(
 						random() * random(),
 						random() * random(),
 						random() * random())),
@@ -169,22 +169,22 @@ SceneAssets SceneList::PlanetsInOneWeekend(CameraInitialSate& camera)
 				}
 				else if (chooseMat < 0.95f) // Metal
 				{
-					models.push_back(std::make_unique<Model>(Model::CreateSphere(center, 0.2f, Material::Metallic(
+					models.push_back(std::unique_ptr<Model>(Model::CreateSphere(center, 0.2f, Material::Metallic(
 						vec3(0.5f * (1 + random()), 0.5f * (1 + random()), 0.5f * (1 + random())),
 						0.5f * random()),
 						isProc)));
 				}
 				else // Glass
 				{
-					models.push_back(std::make_unique<Model>(Model::CreateSphere(center, 0.2f, Material::Dielectric(1.5f), isProc)));
+					models.push_back(std::unique_ptr<Model>(Model::CreateSphere(center, 0.2f, Material::Dielectric(1.5f), isProc)));
 				}
 			}
 		}
 	}
 
-	models.push_back(std::make_unique<Model>(Model::CreateSphere(vec3(0, 1, 0), 1.0f, Material::Metallic(vec3(1.0f), 0.1f, 2), isProc)));
-	models.push_back(std::make_unique<Model>(Model::CreateSphere(vec3(-4, 1, 0), 1.0f, Material::Lambertian(vec3(1.0f), 0), isProc)));
-	models.push_back(std::make_unique<Model>(Model::CreateSphere(vec3(4, 1, 0), 1.0f, Material::Metallic(vec3(1.0f), 0.0f, 1), isProc)));
+	models.push_back(std::unique_ptr<Model>(Model::CreateSphere(vec3(0, 1, 0), 1.0f, Material::Metallic(vec3(1.0f), 0.1f, 2), isProc)));
+	models.push_back(std::unique_ptr<Model>(Model::CreateSphere(vec3(-4, 1, 0), 1.0f, Material::Lambertian(vec3(1.0f), 0), isProc)));
+	models.push_back(std::unique_ptr<Model>(Model::CreateSphere(vec3(4, 1, 0), 1.0f, Material::Metallic(vec3(1.0f), 0.0f, 1), isProc)));
 
 	textures.push_back(Texture::LoadTexture("../assets/textures/2k_mars.jpg", Vulkan::SamplerConfig()));
 	textures.push_back(Texture::LoadTexture("../assets/textures/2k_moon.jpg", Vulkan::SamplerConfig()));
@@ -218,7 +218,7 @@ SceneAssets SceneList::LucyInOneWeekend(CameraInitialSate& camera)
 
 	std::vector<std::unique_ptr<Model>> models;
 	
-	models.push_back(std::make_unique<Model>(Model::CreateSphere(vec3(0, -1000, 0), 1000, Material::Lambertian(vec3(0.5f, 0.5f, 0.5f)), isProc)));
+	models.push_back(std::unique_ptr<Model>(Model::CreateSphere(vec3(0, -1000, 0), 1000, Material::Lambertian(vec3(0.5f, 0.5f, 0.5f)), isProc)));
 
 	for (int a = -11; a < 11; ++a)
 	{
@@ -231,7 +231,7 @@ SceneAssets SceneList::LucyInOneWeekend(CameraInitialSate& camera)
 			{
 				if (chooseMat < 0.8f) // Diffuse
 				{
-					models.push_back(std::make_unique<Model>(Model::CreateSphere(center, 0.2f, Material::Lambertian(vec3(
+					models.push_back(std::unique_ptr<Model>(Model::CreateSphere(center, 0.2f, Material::Lambertian(vec3(
 						random()*random(),
 						random()*random(),
 						random()*random())),
@@ -239,14 +239,14 @@ SceneAssets SceneList::LucyInOneWeekend(CameraInitialSate& camera)
 				}
 				else if (chooseMat < 0.95f) // Metal
 				{
-					models.push_back(std::make_unique<Model>(Model::CreateSphere(center, 0.2f, Material::Metallic(
+					models.push_back(std::unique_ptr<Model>(Model::CreateSphere(center, 0.2f, Material::Metallic(
 						vec3(0.5f*(1 + random()), 0.5f*(1 + random()), 0.5f*(1 + random())),
 						0.5f*random()),
 						isProc)));
 				}
 				else // Glass
 				{
-					models.push_back(std::make_unique<Model>(Model::CreateSphere(center, 0.2f, Material::Dielectric(1.5f), isProc)));
+					models.push_back(std::unique_ptr<Model>(Model::CreateSphere(center, 0.2f, Material::Dielectric(1.5f), isProc)));
 				}
 			}
 		}
@@ -285,9 +285,9 @@ SceneAssets SceneList::LucyInOneWeekend(CameraInitialSate& camera)
 	lucy1->SetMaterial(Material::Lambertian(vec3(0.4f, 0.2f, 0.1f)));
 	lucy2->SetMaterial(Material::Metallic(vec3(0.7f, 0.6f, 0.5f), 0.05f));
 
-	models.push_back(std::make_unique<Model>(lucy0));
-	models.push_back(std::make_unique<Model>(lucy1));
-	models.push_back(std::make_unique<Model>(lucy2));
+	models.push_back(std::unique_ptr<Model>(lucy0));
+	models.push_back(std::unique_ptr<Model>(lucy1));
+	models.push_back(std::unique_ptr<Model>(lucy2));
 
 	// create an instance for each model:
 	std::vector<ModelInstance> modelInstances;
@@ -318,9 +318,9 @@ SceneAssets SceneList::CornellBox(CameraInitialSate& camera)
 	box1->Transform(rotate(translate(i, vec3(555 - 265 - 165, 0, -295)), radians(15.0f), vec3(0, 1, 0)));
 
 	std::vector<std::unique_ptr<Model>> models;
-	models.push_back(std::make_unique<Model>(Model::CreateCornellBox(555)));
-	models.push_back(std::make_unique<Model>(box0));
-	models.push_back(std::make_unique<Model>(box1));
+	models.push_back(std::unique_ptr<Model>(Model::CreateCornellBox(555)));
+	models.push_back(std::unique_ptr<Model>(box0));
+	models.push_back(std::unique_ptr<Model>(box1));
 
 	// create an instance for each model:
 	std::vector<ModelInstance> modelInstances;
@@ -353,9 +353,9 @@ SceneAssets SceneList::CornellBoxLucy(CameraInitialSate& camera)
 			radians(75.0f), vec3(0, 1, 0)));
 
 	std::vector<std::unique_ptr<Model>> models;
-	models.push_back(std::make_unique<Model>(Model::CreateCornellBox(555)));
-	models.push_back(std::make_unique<Model>(sphere));
-	models.push_back(std::make_unique<Model>(lucy0));
+	models.push_back(std::unique_ptr<Model>(Model::CreateCornellBox(555)));
+	models.push_back(std::unique_ptr<Model>(sphere));
+	models.push_back(std::unique_ptr<Model>(lucy0));
 
 	// create an instance for each model:
 	std::vector<ModelInstance> modelInstances;
@@ -394,11 +394,11 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 		// TODO:  allow a procedural model to have a transform?
 		auto sphere = Model::CreateSphere(vec3(agent.x, agent.y, agent.z), agent.collision_radius, Material::Lambertian(vec3(1.0f,1.0f, 1.0f)), true);
 //		sphere.Transform(translate(i, vec3(agent.x, agent.y, agent.z)));
-		models.push_back(std::make_unique<Model>(sphere));
+		models.push_back(std::unique_ptr<Model>(sphere));
 	}
 
 	auto domelight = Model::CreateSphere(vec3(0, 0, 0), 300.0, Material::DiffuseLight(vec3(0.5f, 0.5f, 0.5f)), true);
-	models.push_back(std::make_unique<Model>(domelight));
+	models.push_back(std::unique_ptr<Model>(domelight));
 	
 	// create an instance for each model:
 	std::vector<ModelInstance> modelInstances;
@@ -413,11 +413,11 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	const auto identity = mat4(1);
 
 	std::vector<std::unique_ptr<Model>> models;
-	models.push_back(std::make_unique<Model>(Assets::LoadCIF("C:\\Users\\dmt\\Downloads\\cellpack_atom_instances_1189_curated\\cellpack_atom_instances_1189_curated.cif", Material::Lambertian(glm::vec3(0.5, 0, 0)))));
+	models.push_back(std::unique_ptr<Model>(Assets::LoadCIF("C:\\Users\\dmt\\Downloads\\cellpack_atom_instances_1189_curated\\cellpack_atom_instances_1189_curated.cif", Material::Lambertian(glm::vec3(0.5, 0, 0)))));
 
 	for (int ii = 0; ii < 4; ++ii) {
-		models.push_back(std::make_unique<Model>(Assets::LoadCIF("C:\\Users\\dmt\\Downloads\\5wj1.cif", Material::Lambertian(glm::vec3(0.5, 0, 0)))));
-		models.push_back(std::make_unique<Model>(Assets::LoadCIF("C:\\Users\\dmt\\Downloads\\6vz8.cif", Material::Lambertian(glm::vec3(0.5, 0.5, 0)))));
+		models.push_back(std::unique_ptr<Model>(Assets::LoadCIF("C:\\Users\\dmt\\Downloads\\5wj1.cif", Material::Lambertian(glm::vec3(0.5, 0, 0)))));
+		models.push_back(std::unique_ptr<Model>(Assets::LoadCIF("C:\\Users\\dmt\\Downloads\\6vz8.cif", Material::Lambertian(glm::vec3(0.5, 0.5, 0)))));
 		//models.push_back(Assets::LoadCIF("C:\\Users\\danielt\\Downloads\\7dzy.cif", Material::Lambertian(glm::vec3(0, 0.5, 0.5))));
 		//models.push_back(Assets::LoadCIF("C:\\Users\\danielt\\Downloads\\7kqe.cif", Material::Lambertian(glm::vec3(0.5, 0, 0.5))));
 		//models.push_back(Assets::LoadCIF("C:\\Users\\danielt\\Downloads\\7jjj.cif", Material::Lambertian(glm::vec3(0, 0.5, 0))));
@@ -442,7 +442,7 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	for (int j = 0; j < nModels; ++j) {
 		const float atomRadius = 2.0f;
 		const float atomRadiusMax = 8.0f;
-		models.push_back(std::make_unique<Model>(Model::CreateRandomSphereGroup(nSpheres, 150.0, atomRadius, atomRadiusMax)));
+		models.push_back(std::unique_ptr<Model>(Model::CreateRandomSphereGroup(nSpheres, 150.0, atomRadius, atomRadiusMax)));
 	}
 #endif
 	// now put many instances of each model into the world.
@@ -466,7 +466,7 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	std::cout << "NSPHERES " << nSpheres << std::endl;
 
 	auto domelight = Model::CreateSphere(vec3(0, 0, 0), volumeSize*10, Material::DiffuseLight(vec3(0.5f, 0.5f, 0.5f)), true);
-	models.push_back(std::make_unique<Model>(domelight));
+	models.push_back(std::unique_ptr<Model>(domelight));
 	modelInstances.push_back(ModelInstance(domelight));
 
 	camera.FieldOfView = 40;
