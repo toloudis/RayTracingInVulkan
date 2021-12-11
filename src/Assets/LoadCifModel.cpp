@@ -200,14 +200,21 @@ return ret;
 
 			while (parse_row(pv)) {
 				std::vector<std::vector<std::string>> operators = parseOperatorList(operExpr);
+
 				if (!operators.empty()) {
 					if (assemblies.find(assemblyId) != assemblies.end()) {
 						// add to existing
-						assemblies[assemblyId].push_back({ {asymIdList, operators[0]} });
+						for (size_t i = 0; i < operators.size(); ++i) {
+							assemblies[assemblyId].push_back({ {asymIdList, operators[i]} });
+						}
 					}
 					else {
 						// first one
 						assemblies[assemblyId] = { {{asymIdList, operators[0]}} };
+						// add to existing
+						for (size_t i = 1; i < operators.size(); ++i) {
+							assemblies[assemblyId].push_back({ {asymIdList, operators[i]} });
+						}
 					}
 
 				}
@@ -397,9 +404,10 @@ return ret;
 		}
 
 		std::vector<std::unique_ptr<Model>> newModels;
-		size_t nEntities = extract.entities.size();
+		size_t nEntities = extract.chains.size();
 		if (nEntities > 0) {
-			for (auto e : extract.entities) {
+			std::unordered_map<std::string, Model*> modelMap;
+			for (auto e : extract.chains) {
 				size_t n = e.second.size();
 				std::cout << "Entity " << e.first << " has " << n << " atoms\n";
 				std::vector<glm::vec3> vertices;
@@ -410,21 +418,50 @@ return ret;
 					radii.push_back(1.0f);
 				}
 				auto model = Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(glm::vec3(0.75, 0, 0.75)), true, filename + " :: " + e.first);
+				modelMap[e.first] = model;
 				newModels.push_back(std::unique_ptr<Model>(model));
 			}
 
 			// now look for instances as assembly.
 			size_t nAssemblies = extract.assemblies.size();
 			if (nAssemblies > 0) {
-
+				// let's just use the first assembly
+				auto assy = (extract.assemblies.begin()->second);
+				for (auto& asymToOp: assy) {
+					for (auto& pair : asymToOp) {
+						// first is entity id: read from modelmap
+						//if not found then skip?
+						auto iter = modelMap.find(pair.first);
+						if (iter != modelMap.end()) {
+							Model* model = iter->second;
+							// second is vector of operations
+							// now look up transforms.
+							for (auto& op : pair.second) {
+								// look up in list of ops
+								auto xformiter = extract.transforms.find(op);
+								if (xformiter == extract.transforms.end()) {
+									// ERROR
+								}
+								else {
+									modelInstances.push_back(ModelInstance(model, xformiter->second));
+								}
+							}
+						}
+					}
+				}
 			}
 			else {
+				// one instance per model entity
 				for (auto& m : newModels) {
 					modelInstances.push_back(ModelInstance(m.get()));
 				}
 
 			}
 
+			// move contents of newmodels into models.
+			// make sure models has room:
+			//models.reserve(models.size() + newModels.size());
+			std::move(newModels.begin(), newModels.end(), std::back_inserter(models));
 		}
 		else {
 			std::vector<glm::vec3> vertices;
@@ -443,7 +480,7 @@ return ret;
 
 		std::cout << elapsed << "s" << std::endl;
 
-		modelInstances.push_back(ModelInstance(models[models.size()-1].get()));
+		//modelInstances.push_back(ModelInstance(models[models.size()-1].get()));
 	}
 
 	Model* LoadCIF(const std::string& filename, const Material& material) {

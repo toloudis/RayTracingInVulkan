@@ -413,11 +413,19 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	const auto identity = mat4(1);
 
 	std::vector<std::unique_ptr<Model>> models;
-	models.push_back(std::unique_ptr<Model>(Assets::LoadCIF("C:\\Users\\dmt\\Downloads\\cellpack_atom_instances_1189_curated\\cellpack_atom_instances_1189_curated.cif", Material::Lambertian(glm::vec3(0.5, 0, 0)))));
+	// 
+// create an instance for each model:
+	std::vector<ModelInstance> modelInstances;
+
+	Assets::LoadCIFAsScene(
+		"C:\\Users\\dmt\\Downloads\\cellpack_atom_instances_1189_curated\\cellpack_atom_instances_1189_curated.cif",
+		models, modelInstances);
+
+	//models.push_back(std::unique_ptr<Model>(Assets::LoadCIF("C:\\Users\\dmt\\Downloads\\cellpack_atom_instances_1189_curated\\cellpack_atom_instances_1189_curated.cif", Material::Lambertian(glm::vec3(0.5, 0, 0)))));
 
 	for (int ii = 0; ii < 4; ++ii) {
-		models.push_back(std::unique_ptr<Model>(Assets::LoadCIF("C:\\Users\\dmt\\Downloads\\5wj1.cif", Material::Lambertian(glm::vec3(0.5, 0, 0)))));
-		models.push_back(std::unique_ptr<Model>(Assets::LoadCIF("C:\\Users\\dmt\\Downloads\\6vz8.cif", Material::Lambertian(glm::vec3(0.5, 0.5, 0)))));
+		//models.push_back(std::unique_ptr<Model>(Assets::LoadCIF("C:\\Users\\dmt\\Downloads\\5wj1.cif", Material::Lambertian(glm::vec3(0.5, 0, 0)))));
+		//models.push_back(std::unique_ptr<Model>(Assets::LoadCIF("C:\\Users\\dmt\\Downloads\\6vz8.cif", Material::Lambertian(glm::vec3(0.5, 0.5, 0)))));
 		//models.push_back(Assets::LoadCIF("C:\\Users\\danielt\\Downloads\\7dzy.cif", Material::Lambertian(glm::vec3(0, 0.5, 0.5))));
 		//models.push_back(Assets::LoadCIF("C:\\Users\\danielt\\Downloads\\7kqe.cif", Material::Lambertian(glm::vec3(0.5, 0, 0.5))));
 		//models.push_back(Assets::LoadCIF("C:\\Users\\danielt\\Downloads\\7jjj.cif", Material::Lambertian(glm::vec3(0, 0.5, 0))));
@@ -446,13 +454,10 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	}
 #endif
 	// now put many instances of each model into the world.
-	// 
-	// create an instance for each model:
-	std::vector<ModelInstance> modelInstances;
 
 //	const int nInstancesPerModel = 2;
 //	const float volumeSize = 200.0f;
-	const int nInstancesPerModel = 25600;
+	const int nInstancesPerModel = 0;
 	const float volumeSize = 50000.0f;
 	size_t nSpheres = 0;
 	for (auto& m : models) {

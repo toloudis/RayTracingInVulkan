@@ -11,5 +11,5 @@ namespace Assets
 	Model* LoadCIF(const std::string& filename, const Material& material);
 
 	// TODO modify this to load multiple models and instances from within one cif file
-	void LoadCIFAsScene(const std::string& filename, std::vector<Model>& models, std::vector<ModelInstance>& modelInstances);
+	void LoadCIFAsScene(const std::string& filename, std::vector<std::unique_ptr<Model>>& models, std::vector<ModelInstance>& modelInstances);
 }
