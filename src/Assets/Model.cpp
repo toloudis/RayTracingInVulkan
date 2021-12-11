@@ -336,8 +336,8 @@ Model* Model::CreateSphereGroup(const std::vector<glm::vec3>& center, const std:
 {
 	// little tiny spheres for mesh geometry.
 	// this is still too much and we should instance individual spheres or do the billboarded POINTS version
-	const int slices = 8;
-	const int stacks = 4;
+	const int slices = 2;
+	const int stacks = 2;
 
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;

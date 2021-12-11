@@ -458,7 +458,7 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 //	const int nInstancesPerModel = 2;
 //	const float volumeSize = 200.0f;
 	const int nInstancesPerModel = 0;
-	const float volumeSize = 50000.0f;
+	const float volumeSize = 5000.0f;
 	size_t nSpheres = 0;
 	for (auto& m : models) {
 		for (int k = 0; k < nInstancesPerModel; ++k) {
