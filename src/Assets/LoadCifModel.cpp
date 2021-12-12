@@ -457,7 +457,11 @@ return ret;
 									// ERROR
 								}
 								else {
-									modelInstances.push_back(ModelInstance(model, xformiter->second));
+									// now we can omit by clipping!!
+									glm::mat4 xform = xformiter->second;
+									if (xform[2][3] > 0) {
+										modelInstances.push_back(ModelInstance(model, xformiter->second));
+									}
 								}
 							}
 						}
