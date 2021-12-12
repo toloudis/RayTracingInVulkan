@@ -256,11 +256,11 @@ return ret;
 				});
 			pv.emplace_back(get_column("matrix[1][2]", Required),
 				[&m](const char* start) {
-					m[0][1] = (float)readcif::str_to_float(start);
+					m[1][0] = (float)readcif::str_to_float(start);
 				});
 			pv.emplace_back(get_column("matrix[1][3]", Required),
 				[&m](const char* start) {
-					m[0][2] = (float)readcif::str_to_float(start);
+					m[2][0] = (float)readcif::str_to_float(start);
 				});
 			pv.emplace_back(get_column("vector[1]", Required),
 				[&m](const char* start) {
@@ -268,7 +268,7 @@ return ret;
 				});
 			pv.emplace_back(get_column("matrix[2][1]", Required),
 				[&m](const char* start) {
-					m[1][0] = (float)readcif::str_to_float(start);
+					m[0][1] = (float)readcif::str_to_float(start);
 				});
 			pv.emplace_back(get_column("matrix[2][2]", Required),
 				[&m](const char* start) {
@@ -276,7 +276,7 @@ return ret;
 				});
 			pv.emplace_back(get_column("matrix[2][3]", Required),
 				[&m](const char* start) {
-					m[1][2] = (float)readcif::str_to_float(start);
+					m[2][1] = (float)readcif::str_to_float(start);
 				});
 			pv.emplace_back(get_column("vector[2]", Required),
 				[&m](const char* start) {
@@ -284,11 +284,11 @@ return ret;
 				});
 			pv.emplace_back(get_column("matrix[3][1]", Required),
 				[&m](const char* start) {
-					m[2][0] = (float)readcif::str_to_float(start);
+					m[0][2] = (float)readcif::str_to_float(start);
 				});
 			pv.emplace_back(get_column("matrix[3][2]", Required),
 				[&m](const char* start) {
-					m[2][1] = (float)readcif::str_to_float(start);
+					m[1][2] = (float)readcif::str_to_float(start);
 				});
 			pv.emplace_back(get_column("matrix[3][3]", Required),
 				[&m](const char* start) {
@@ -459,9 +459,9 @@ return ret;
 								else {
 									// now we can omit by clipping!!
 									glm::mat4 xform = xformiter->second;
-									if (xform[2][3] > 0) {
+									//if (xform[2][3] > 0) {
 										modelInstances.push_back(ModelInstance(model, xformiter->second));
-									}
+									//}
 								}
 							}
 						}
