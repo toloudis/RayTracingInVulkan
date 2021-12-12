@@ -1,5 +1,6 @@
 #include "LoadCifModel.hpp"
 #include "readcif.h"
+#include "Utilities/Random.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
@@ -54,6 +55,11 @@ namespace Assets {
 			tokens.push_back(token);
 		}
 		return tokens;
+	}
+	std::vector<std::string> parseAsymIdList(const std::string& value) {
+		// comma separated list of ids.
+		std::vector<std::string> splitted = split(value, ',');
+		return splitted;
 	}
 
 	std::vector<std::vector<std::string>> parseOperatorList(const std::string& value) {
@@ -200,20 +206,28 @@ return ret;
 
 			while (parse_row(pv)) {
 				std::vector<std::vector<std::string>> operators = parseOperatorList(operExpr);
+				std::vector<std::string> asymIds = parseAsymIdList(asymIdList);
 
 				if (!operators.empty()) {
 					if (assemblies.find(assemblyId) != assemblies.end()) {
 						// add to existing
 						for (size_t i = 0; i < operators.size(); ++i) {
-							assemblies[assemblyId].push_back({ {asymIdList, operators[i]} });
+							for (auto asymId : asymIds) {
+								assemblies[assemblyId].push_back({ {asymId, operators[i]} });
+							}
 						}
 					}
 					else {
 						// first one
-						assemblies[assemblyId] = { {{asymIdList, operators[0]}} };
+						assemblies[assemblyId] = { {{asymIds[0], operators[0]}}};
+						for (size_t i = 1; i < asymIds.size(); ++i) {
+							assemblies[assemblyId].push_back({ {asymIds[i], operators[0]}});
+						}
 						// add to existing
 						for (size_t i = 1; i < operators.size(); ++i) {
-							assemblies[assemblyId].push_back({ {asymIdList, operators[i]} });
+							for (auto asymId : asymIds) {
+								assemblies[assemblyId].push_back({ {asymId, operators[i]} });
+							}
 						}
 					}
 
@@ -388,7 +402,7 @@ return ret;
 
 	void LoadCIFAsScene(const std::string& filename, std::vector<std::unique_ptr<Model>>& models, std::vector<ModelInstance>& modelInstances)
 	{
-		std::cout << "- loading '" << filename << "'... " << std::flush;
+		std::cout << "- loading '" << filename << "'... " << std::endl << std::flush;
 		const auto timer = std::chrono::high_resolution_clock::now();
 		const std::string materialPath = std::filesystem::path(filename).parent_path().string();
 
@@ -400,7 +414,7 @@ return ret;
 			extract.build_entities();
 		}
 		catch (std::exception& e) {
-			std::cerr << e.what() << '\n';
+			std::cerr << e.what() << std::endl;
 		}
 
 		std::vector<std::unique_ptr<Model>> newModels;
@@ -409,7 +423,7 @@ return ret;
 			std::unordered_map<std::string, Model*> modelMap;
 			for (auto e : extract.chains) {
 				size_t n = e.second.size();
-				std::cout << "Entity " << e.first << " has " << n << " atoms\n";
+				std::cout << "Entity " << e.first << " has " << n << " atoms" << std::endl;
 				std::vector<glm::vec3> vertices;
 				std::vector<float> radii;
 				for (size_t i = 0; i < n; ++i) {
@@ -417,7 +431,7 @@ return ret;
 					vertices.push_back(glm::vec3(a->x, a->y, a->z));
 					radii.push_back(1.0f);
 				}
-				auto model = Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(glm::vec3(0.75, 0, 0.75)), true, filename + " :: " + e.first);
+				auto model = Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(randomInBox(1.0, 1.0, 1.0) + glm::vec3(0.5, 0.5, 0.5)), true, filename + " :: " + e.first);
 				modelMap[e.first] = model;
 				newModels.push_back(std::unique_ptr<Model>(model));
 			}
@@ -473,7 +487,7 @@ return ret;
 				vertices.push_back(glm::vec3(a.x, a.y, a.z));
 				radii.push_back(1.0f);
 			}
-			models.push_back(std::unique_ptr<Model>(Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(glm::vec3(0.75, 0, 0.75)), true, filename)));
+			models.push_back(std::unique_ptr<Model>(Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(randomInBox(1.0,1.0,1.0) + glm::vec3(0.5, 0.5, 0.5)), true, filename)));
 		}
 
 		const auto elapsed = std::chrono::duration<float, std::chrono::seconds::period>(std::chrono::high_resolution_clock::now() - timer).count();

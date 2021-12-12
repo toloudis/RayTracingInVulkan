@@ -418,6 +418,7 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	std::vector<ModelInstance> modelInstances;
 
 	Assets::LoadCIFAsScene(
+		//"C:\\Users\\dmt\\Downloads\\2plv.cif",
 		"C:\\Users\\dmt\\Downloads\\cellpack_atom_instances_1189_curated\\cellpack_atom_instances_1189_curated.cif",
 		models, modelInstances);
 
