@@ -460,15 +460,18 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 //	const float volumeSize = 200.0f;
 	const int nInstancesPerModel = 0;
 	const float volumeSize = 5000.0f;
-	size_t nSpheres = 0;
 	for (auto& m : models) {
 		for (int k = 0; k < nInstancesPerModel; ++k) {
-			nSpheres += m->Procedural()->NumBoundingBoxes();
 			modelInstances.push_back(ModelInstance(m.get(), glm::transpose(glm::translate(identity, randomInBox(volumeSize, volumeSize, volumeSize)) * glm::rotate(identity, frand() * 3.14159265f, randomInSphere(1.0)))));
 		}
 		//break;
 	}
 
+
+	size_t nSpheres = 0;
+	for (auto& inst : modelInstances) {
+		nSpheres += inst.model_->Procedural()->NumBoundingBoxes();
+	}
 	std::cout << "NSPHERES " << nSpheres << std::endl;
 
 	auto domelight = Model::CreateSphere(vec3(0, 0, 0), volumeSize*10, Material::DiffuseLight(vec3(0.5f, 0.5f, 0.5f)), true);
