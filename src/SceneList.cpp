@@ -18,33 +18,48 @@ using Assets::Model;
 using Assets::ModelInstance;
 using Assets::Texture;
 
-namespace {
-	void AddRayTracingInOneWeekendCommonScene(std::vector<std::unique_ptr<Model>>& models, const bool& isProc, std::function<float ()>& random) {
-		models.push_back(std::unique_ptr<Model>(Model::CreateSphere(vec3(0, -1000, 0), 1000, Material::Lambertian(vec3(0.5f, 0.5f, 0.5f)), isProc)));
+namespace
+{
 
-		for (int a = -11; a < 11; ++a)
+	void AddRayTracingInOneWeekendCommonScene(std::vector<std::unique_ptr<Model>>& models, const bool& isProc, std::function<float ()>& random)
+	{
+		// Common models from the final scene from Ray Tracing In One Weekend book. Only the three central spheres are missing.
+		// Calls to random() are always explicit and non-inlined to avoid C++ undefined evaluation order of function arguments,
+		// this guarantees consistent and reproducible behaviour across different platforms and compilers.
+
+		models.push_back(
+			std::unique_ptr<Model>(
+				Model::CreateSphere(vec3(0.0f, -1000.0f, 0.0f), 1000.0f, Material::Lambertian(vec3(0.5f, 0.5f, 0.5f)), isProc)
+			)
+		);
+
+		for (int i = -11; i < 11; ++i)
 		{
-			for (int b = -11; b < 11; ++b)
+			for (int j = -11; j < 11; ++j)
 			{
 				const float chooseMat = random();
-				const vec3 center(a + 0.9f*random(), 0.2f, b + 0.9f*random());
+				const float center_y = static_cast<float>(j) + 0.9f * random();
+				const float center_x = static_cast<float>(i) + 0.9f * random();
+				const vec3 center(center_x, 0.2f, center_y);
 
-				if (length(center - vec3(4, 0.2f, 0)) > 0.9)
+				if (length(center - vec3(4, 0.2f, 0)) > 0.9f)
 				{
 					if (chooseMat < 0.8f) // Diffuse
 					{
-						models.push_back(std::unique_ptr<Model>(Model::CreateSphere(center, 0.2f, Material::Lambertian(vec3(
-							random()*random(),
-							random()*random(),
-							random()*random())),
-							isProc)));
+						const float b = random() * random();
+						const float g = random() * random();
+						const float r = random() * random();
+
+						models.push_back(std::unique_ptr<Model>(Model::CreateSphere(center, 0.2f, Material::Lambertian(vec3(r, g, b)), isProc)));
 					}
 					else if (chooseMat < 0.95f) // Metal
 					{
-						models.push_back(std::unique_ptr<Model>(Model::CreateSphere(center, 0.2f, Material::Metallic(
-							vec3(0.5f*(1 + random()), 0.5f*(1 + random()), 0.5f*(1 + random())),
-							0.5f*random()),
-							isProc)));
+						const float fuzziness = 0.5f * random();
+						const float b = 0.5f * (1 + random());
+						const float g = 0.5f * (1 + random());
+						const float r = 0.5f * (1 + random());
+
+						models.push_back(std::unique_ptr<Model>(Model::CreateSphere(center, 0.2f, Material::Metallic(vec3(r, g, b), fuzziness), isProc)));
 					}
 					else // Glass
 					{
@@ -54,6 +69,7 @@ namespace {
 			}
 		}
 	}
+
 }
 
 const std::vector<std::pair<std::string, std::function<SceneAssets (SceneList::CameraInitialSate&)>>> SceneList::AllScenes =
@@ -71,7 +87,7 @@ const std::vector<std::pair<std::string, std::function<SceneAssets (SceneList::C
 SceneAssets SceneList::CubeAndSpheres(CameraInitialSate& camera)
 {
 	// Basic test scene.
-	
+
 	camera.ModelView = translate(mat4(1), vec3(0, 0, -2));
 	camera.FieldOfView = 90;
 	camera.Aperture = 0.05f;
@@ -102,7 +118,7 @@ SceneAssets SceneList::CubeAndSpheres(CameraInitialSate& camera)
 SceneAssets SceneList::RayTracingInOneWeekend(CameraInitialSate& camera)
 {
 	// Final scene from Ray Tracing In One Weekend book.
-	
+
 	camera.ModelView = lookAt(vec3(13, 2, 3), vec3(0, 0, 0), vec3(0, 1, 0));
 	camera.FieldOfView = 20;
 	camera.Aperture = 0.1f;
@@ -133,11 +149,10 @@ SceneAssets SceneList::RayTracingInOneWeekend(CameraInitialSate& camera)
 	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }
 
-
 SceneAssets SceneList::PlanetsInOneWeekend(CameraInitialSate& camera)
 {
 	// Same as RayTracingInOneWeekend but using textures.
-	
+
 	camera.ModelView = lookAt(vec3(13, 2, 3), vec3(0, 0, 0), vec3(0, 1, 0));
 	camera.FieldOfView = 20;
 	camera.Aperture = 0.1f;
@@ -149,7 +164,7 @@ SceneAssets SceneList::PlanetsInOneWeekend(CameraInitialSate& camera)
 	const bool isProc = true;
 
 	std::mt19937 engine(42);
-	std::function<float ()> random = std::bind(std::uniform_real_distribution<float>(), engine);
+	std::function<float()> random = std::bind(std::uniform_real_distribution<float>(), engine);
 
 	std::vector<std::unique_ptr<Model>> models;
 	std::vector<Texture> textures;
@@ -176,7 +191,7 @@ SceneAssets SceneList::PlanetsInOneWeekend(CameraInitialSate& camera)
 SceneAssets SceneList::LucyInOneWeekend(CameraInitialSate& camera)
 {
 	// Same as RayTracingInOneWeekend but using the Lucy 3D model.
-	
+
 	camera.ModelView = lookAt(vec3(13, 2, 3), vec3(0, 1.0, 0), vec3(0, 1, 0));
 	camera.FieldOfView = 20;
 	camera.Aperture = 0.05f;
@@ -188,10 +203,10 @@ SceneAssets SceneList::LucyInOneWeekend(CameraInitialSate& camera)
 	const bool isProc = true;
 
 	std::mt19937 engine(42);
-	std::function<float ()> random = std::bind(std::uniform_real_distribution<float>(), engine);
+	std::function<float()> random = std::bind(std::uniform_real_distribution<float>(), engine);
 
 	std::vector<std::unique_ptr<Model>> models;
-	
+
 	AddRayTracingInOneWeekendCommonScene(models, isProc, random);
 
 	auto lucy0 = Model::LoadModel("../assets/models/lucy.obj");
@@ -205,7 +220,7 @@ SceneAssets SceneList::LucyInOneWeekend(CameraInitialSate& camera)
 	lucy0->Transform(
 		rotate(
 			scale(
-				translate(i, vec3(0, -0.08f, 0)), 
+				translate(i, vec3(0, -0.08f, 0)),
 				vec3(scaleFactor)),
 			radians(90.0f), vec3(0, 1, 0)));
 
@@ -320,7 +335,7 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 			j,
 			0,
 		trajectoryFrame);
-	
+
 	camera.ModelView = lookAt(vec3(0,0,150), vec3(0,0, 0), vec3(0, 1, 0));
 	camera.FieldOfView = 40;
 	camera.Aperture = 0.0f;
@@ -341,7 +356,7 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 
 	auto domelight = Model::CreateSphere(vec3(0, 0, 0), 300.0, Material::DiffuseLight(vec3(0.5f, 0.5f, 0.5f)), true);
 	models.push_back(std::unique_ptr<Model>(domelight));
-	
+
 	// create an instance for each model:
 	std::vector<ModelInstance> modelInstances;
 	for (auto& m : models) {
@@ -355,7 +370,7 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	const auto identity = mat4(1);
 
 	std::vector<std::unique_ptr<Model>> models;
-	// 
+	//
 // create an instance for each model:
 	std::vector<ModelInstance> modelInstances;
 
