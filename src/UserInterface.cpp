@@ -31,8 +31,8 @@ namespace
 }
 
 UserInterface::UserInterface(
-	Vulkan::CommandPool& commandPool, 
-	const Vulkan::SwapChain& swapChain, 
+	Vulkan::CommandPool& commandPool,
+	const Vulkan::SwapChain& swapChain,
 	const Vulkan::DepthBuffer& depthBuffer,
 	UserSettings& userSettings) :
 	userSettings_(userSettings)
@@ -182,7 +182,7 @@ void UserInterface::DrawSettings()
 		ImGui::BulletText("F1: toggle Settings.");
 		ImGui::BulletText("F2: toggle Statistics.");
 		ImGui::BulletText(
-			"%c%c%c%c/SHIFT/CTRL: move camera.", 
+			"%c%c%c%c/SHIFT/CTRL: move camera.",
 			std::toupper(window.GetKeyName(GLFW_KEY_W, 0)[0]),
 			std::toupper(window.GetKeyName(GLFW_KEY_A, 0)[0]),
 			std::toupper(window.GetKeyName(GLFW_KEY_S, 0)[0]),
@@ -197,9 +197,11 @@ void UserInterface::DrawSettings()
 		ImGui::PopItemWidth();
 		ImGui::NewLine();
 
-		ImGui::Text("Ray Tracing");
+		std::vector<const char*> renderers = {"Rasterizer", "Progressive Path Tracer", "Single Pass Ray Tracer"};
+		ImGui::Text("Renderer");
 		ImGui::Separator();
-		ImGui::Checkbox("Enable ray tracing", &Settings().IsRayTraced);
+		ImGui::Combo("##Renderer", &Settings().Renderer, renderers.data(), static_cast<int>(renderers.size()));
+
 		ImGui::Checkbox("Accumulate rays between frames", &Settings().AccumulateRays);
 		uint32_t min = 1, max = 128;
 		ImGui::SliderScalar("Samples", ImGuiDataType_U32, &Settings().NumberOfSamples, &min, &max);

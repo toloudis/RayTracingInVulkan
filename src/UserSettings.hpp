@@ -1,5 +1,11 @@
 #pragma once
 
+enum struct RendererType: uint32_t {
+	Rasterizer,
+	ProgressivePathTracer,
+	SinglePassRayTracer,
+};
+
 struct UserSettings final
 {
 	// Application
@@ -8,12 +14,12 @@ struct UserSettings final
 	// Benchmark
 	bool BenchmarkNextScenes{};
 	uint32_t BenchmarkMaxTime{};
-	
+
 	// Scene
 	int SceneIndex;
 
 	// Renderer
-	bool IsRayTraced;
+	RendererType Renderer;
 	bool AccumulateRays;
 	uint32_t NumberOfSamples;
 	uint32_t NumberOfBounces;
@@ -38,11 +44,24 @@ struct UserSettings final
 	bool RequiresAccumulationReset(const UserSettings& prev) const
 	{
 		return
-			IsRayTraced != prev.IsRayTraced ||
+			Renderer != prev.Renderer ||
 			AccumulateRays != prev.AccumulateRays ||
 			NumberOfBounces != prev.NumberOfBounces ||
 			FieldOfView != prev.FieldOfView ||
 			Aperture != prev.Aperture ||
 			FocusDistance != prev.FocusDistance;
+	}
+	RendererType CycleIncrementRenderer() {
+		switch (Renderer)
+		{
+		case RendererType::Rasterizer:
+			return RendererType::ProgressivePathTracer;
+		case RendererType::ProgressivePathTracer:
+			return RendererType::SinglePassRayTracer;
+		case RendererType::SinglePassRayTracer:
+			return RendererType::Rasterizer;
+		default:
+			return RendererType::Rasterizer;
+		}
 	}
 };

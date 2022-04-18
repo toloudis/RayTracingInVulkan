@@ -20,7 +20,7 @@ public:
 
 	// Application options.
 	bool Benchmark{};
-	// 
+	//
 	// Benchmark options.
 	bool BenchmarkNextScenes{};
 	uint32_t BenchmarkMaxTime{};
@@ -29,6 +29,7 @@ public:
 	uint32_t SceneIndex{};
 
 	// Renderer options.
+	uint32_t RendererIndex{};
 	uint32_t Samples{};
 	uint32_t Bounces{};
 	uint32_t MaxSamples{};

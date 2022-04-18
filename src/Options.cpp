@@ -6,10 +6,16 @@
 
 using namespace boost::program_options;
 
+static const std::vector<std::string> AllRenderers = {
+	"Rasterizer",
+	"ProgressivePathTracer",
+	"SinglePassRayTracer",
+};
+
 Options::Options(const int argc, const char* argv[])
 {
 	const int lineLength = 120;
-	
+
 	options_description benchmark("Benchmark options", lineLength);
 	benchmark.add_options()
 		("next-scenes", bool_switch(&BenchmarkNextScenes)->default_value(false), "Load the next scene once the sample or time limit is reached.")
@@ -18,6 +24,7 @@ Options::Options(const int argc, const char* argv[])
 
 	options_description renderer("Renderer options", lineLength);
 	renderer.add_options()
+		("renderer", value<uint32_t>(&RendererIndex)->default_value(0), "Rendering mode.")
 		("samples", value<uint32_t>(&Samples)->default_value(8), "The number of ray samples per pixel.")
 		("bounces", value<uint32_t>(&Bounces)->default_value(16), "The maximum number of bounces per ray.")
 		("max-samples", value<uint32_t>(&MaxSamples)->default_value(64 * 1024), "The maximum number of accumulated ray samples per pixel.")
@@ -59,6 +66,10 @@ Options::Options(const int argc, const char* argv[])
 	}
 
 	if (SceneIndex >= SceneList::AllScenes.size())
+	{
+		Throw(std::out_of_range("scene index is too large"));
+	}
+	if (RendererIndex >= AllRenderers.size())
 	{
 		Throw(std::out_of_range("scene index is too large"));
 	}

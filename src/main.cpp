@@ -62,7 +62,7 @@ int main(int argc, const char* argv[]) noexcept
 
 	catch (const std::exception& exception)
 	{
-		Utilities::Console::Write(Utilities::Severity::Fatal, [&exception]() 
+		Utilities::Console::Write(Utilities::Severity::Fatal, [&exception]()
 		{
 			const auto stacktrace = boost::get_error_info<traced>(exception);
 
@@ -96,10 +96,10 @@ namespace
 		userSettings.Benchmark = options.Benchmark;
 		userSettings.BenchmarkNextScenes = options.BenchmarkNextScenes;
 		userSettings.BenchmarkMaxTime = options.BenchmarkMaxTime;
-		
+
 		userSettings.SceneIndex = options.SceneIndex;
 
-		userSettings.IsRayTraced = true;
+		userSettings.Rendeer = RendererType::ProgressivePathTracer;
 		userSettings.AccumulateRays = true;
 		userSettings.NumberOfSamples = options.Samples;
 		userSettings.NumberOfBounces = options.Bounces;
@@ -119,7 +119,7 @@ namespace
 		std::cout << "Vulkan SDK Header Version: " << VK_HEADER_VERSION << std::endl;
 		std::cout << std::endl;
 	}
-	
+
 	void PrintVulkanInstanceInformation(const Vulkan::Application& application, const bool benchmark)
 	{
 		if (benchmark)
@@ -156,7 +156,7 @@ namespace
 
 		std::cout << std::endl;
 	}
-	
+
 	void PrintVulkanDevices(const Vulkan::Application& application)
 	{
 		std::cout << "Vulkan Devices: " << std::endl;
@@ -165,11 +165,11 @@ namespace
 		{
 			VkPhysicalDeviceDriverProperties driverProp{};
 			driverProp.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRIVER_PROPERTIES;
-			
+
 			VkPhysicalDeviceProperties2 deviceProp{};
 			deviceProp.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
 			deviceProp.pNext = &driverProp;
-			
+
 			vkGetPhysicalDeviceProperties2(device, &deviceProp);
 
 			VkPhysicalDeviceFeatures features;

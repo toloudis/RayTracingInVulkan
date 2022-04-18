@@ -66,7 +66,7 @@ namespace Assets {
 		// (a)
 		// (1-5)
 		// (1-5)(1-5)
-		// 
+		//
 		// '(X0)(1-5)' becomes [['X0'], ['1', '2', '3', '4', '5']]
 		// kudos to Glen van Ginkel.
 		std::vector<std::string> groups;
@@ -83,7 +83,7 @@ namespace Assets {
 				groups.push_back(match.str(i));
 			}
 		}
-	
+
 		for (auto g : groups) {
 			std::vector<std::string> group;
 			std::vector<std::string> splitted = split(g, ',');
@@ -368,7 +368,7 @@ return ret;
 		void build_entities() {
 			for (const Atom& atom : atoms) {
 				//danger this string conversion is super inefficient here.
-				std::string entity_id = atom.entity_id; 
+				std::string entity_id = atom.entity_id;
 				if (entities.find(entity_id) != entities.end()) {
 					// add to existing
 					entities[entity_id].push_back(&atom);
@@ -396,8 +396,8 @@ return ret;
 		std::unordered_map<std::string, glm::mat4> transforms;
 		// each assembly has a list of asym units
 		// and each asym unit has a list of ops
-		using AsymToOp = std::unordered_map<std::string, std::vector<std::string>>;
-		std::unordered_map<std::string, std::vector<AsymToOp>> assemblies;
+		using AsymUnit = std::unordered_map<std::string, std::vector<std::string>>;
+		std::unordered_map<std::string, std::vector<AsymUnit>> assemblies;
 	};
 
 	void LoadCIFAsScene(const std::string& filename, std::vector<std::unique_ptr<Model>>& models, std::vector<ModelInstance>& modelInstances)
@@ -405,7 +405,6 @@ return ret;
 		std::cout << "- loading '" << filename << "'... " << std::endl << std::flush;
 		const auto timer = std::chrono::high_resolution_clock::now();
 		const std::string materialPath = std::filesystem::path(filename).parent_path().string();
-
 
 		ExtractCIF extract;
 
@@ -441,24 +440,27 @@ return ret;
 			if (nAssemblies > 0) {
 				// let's just use the first assembly
 				auto assy = (extract.assemblies.begin()->second);
-				for (auto& asymToOp: assy) {
-					for (auto& pair : asymToOp) {
+				for (auto& asymUnit: assy) {
+					for (auto& opsEntry : asymUnit) {
+						auto entityId = opsEntry.first;
 						// first is entity id: read from modelmap
 						//if not found then skip?
-						auto iter = modelMap.find(pair.first);
+						auto iter = modelMap.find(entityId);
 						if (iter != modelMap.end()) {
 							Model* model = iter->second;
 							// second is vector of operations
 							// now look up transforms.
-							for (auto& op : pair.second) {
+							auto opsList = opsEntry.second;
+							for (auto& op : opsList) {
 								// look up in list of ops
 								auto xformiter = extract.transforms.find(op);
 								if (xformiter == extract.transforms.end()) {
 									// ERROR
 								}
 								else {
-									// now we can omit by clipping!!
 									glm::mat4 xform = xformiter->second;
+									// now we can omit by clipping!!
+									// todo: implement clipping post-load time for more dynamic updates elsewhere in code
 									//if (xform[2][3] > 0) {
 										modelInstances.push_back(ModelInstance(model, xformiter->second));
 									//}
@@ -481,7 +483,8 @@ return ret;
 			//models.reserve(models.size() + newModels.size());
 			std::move(newModels.begin(), newModels.end(), std::back_inserter(models));
 		}
-		else {
+		else { // nEntities <= 0
+			// one sphere per atom in the atoms list
 			std::vector<glm::vec3> vertices;
 			std::vector<float> radii;
 			size_t n = extract.atoms.size();
