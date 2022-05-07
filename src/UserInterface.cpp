@@ -200,7 +200,7 @@ void UserInterface::DrawSettings()
 		std::vector<const char*> renderers = {"Rasterizer", "Progressive Path Tracer", "Single Pass Ray Tracer"};
 		ImGui::Text("Renderer");
 		ImGui::Separator();
-		ImGui::Combo("##Renderer", &Settings().Renderer, renderers.data(), static_cast<int>(renderers.size()));
+		ImGui::Combo("##Renderer", (int*) & Settings().Renderer, renderers.data(), static_cast<int>(renderers.size()));
 
 		ImGui::Checkbox("Accumulate rays between frames", &Settings().AccumulateRays);
 		uint32_t min = 1, max = 128;

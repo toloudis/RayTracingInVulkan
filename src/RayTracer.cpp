@@ -155,7 +155,7 @@ void RayTracer::Render(VkCommandBuffer commandBuffer, const uint32_t imageIndex)
 	CheckAndUpdateBenchmarkState(prevTime);
 
 	// Render the scene
-	(userSettings_.Renderer == RendererType::ProgressivePathTracer) ?
+	(userSettings_.Renderer == RendererType::ProgressivePathTracer)
 		? Vulkan::RayTracing::Application::Render(commandBuffer, imageIndex)
 		: Vulkan::Application::Render(commandBuffer, imageIndex);
 

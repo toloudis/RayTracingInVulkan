@@ -128,6 +128,8 @@ set(src_files_vulkan_raytracing
 	Vulkan/RayTracing/DeviceProcedures.hpp
 	Vulkan/RayTracing/RayTracingPipeline.cpp
 	Vulkan/RayTracing/RayTracingPipeline.hpp
+	Vulkan/RayTracing/RayTracingPipelineSinglePass.cpp
+	Vulkan/RayTracing/RayTracingPipelineSinglePass.hpp
 	Vulkan/RayTracing/RayTracingProperties.cpp
 	Vulkan/RayTracing/RayTracingProperties.hpp
 	Vulkan/RayTracing/ShaderBindingTable.cpp
