@@ -19,7 +19,7 @@ using namespace glm;
 namespace Assets {
 #define MAX_CHAR_ATOM_NAME 4
 #define MAX_CHAR_RES_NAME 4
-#define MAX_CHAR_CHAIN_ID 4
+#define MAX_CHAR_CHAIN_ID 7
 #define MAX_CHAR_ENTITY_ID 4
 	struct Atom
 	{
@@ -205,22 +205,28 @@ return ret;
 				});
 
 			while (parse_row(pv)) {
+				//1 '(11143)' R3534,R3544,R5594,R5596,R8579,R8590,R9086,R9087,R11216
+				//1 '(11204)' R4356,R8216,R8752,R8753,R8755,R8756,R9526,R11727,R11730
 				std::vector<std::vector<std::string>> operators = parseOperatorList(operExpr);
 				std::vector<std::string> asymIds = parseAsymIdList(asymIdList);
-
+				//std::cout << assemblyId<< " parse_assemblies  " << operators.size() << " ... " << asymIds.size() << std::endl << std::flush;
 				if (!operators.empty()) {
 					if (assemblies.find(assemblyId) != assemblies.end()) {
 						// add to existing
+						//std::cout << "add to existing" << std::endl;
 						for (size_t i = 0; i < operators.size(); ++i) {
 							for (auto asymId : asymIds) {
+								//std::cout << "add " << asymId  << " " << operators[i].size() << std::endl;
 								assemblies[assemblyId].push_back({ {asymId, operators[i]} });
 							}
 						}
 					}
 					else {
 						// first one
+						//std::cout << "first one" << std::endl;
 						assemblies[assemblyId] = { {{asymIds[0], operators[0]}}};
 						for (size_t i = 1; i < asymIds.size(); ++i) {
+							//std::cout << "add " << asymIds[i] << " " << operators[0].size() << std::endl;
 							assemblies[assemblyId].push_back({ {asymIds[i], operators[0]}});
 						}
 						// add to existing
@@ -235,10 +241,9 @@ return ret;
 				else {
 					// ERROR???
 				}
-			}
-
-
+			}	
 		}
+
 		void parse_transform()
 		{
 			readcif::CIFFile::ParseValues pv;
@@ -256,19 +261,19 @@ return ret;
 				});
 			pv.emplace_back(get_column("matrix[1][2]", Required),
 				[&m](const char* start) {
-					m[1][0] = (float)readcif::str_to_float(start);
+					m[0][1] = (float)readcif::str_to_float(start);
 				});
 			pv.emplace_back(get_column("matrix[1][3]", Required),
 				[&m](const char* start) {
-					m[2][0] = (float)readcif::str_to_float(start);
+					m[0][2] = (float)readcif::str_to_float(start);
 				});
 			pv.emplace_back(get_column("vector[1]", Required),
 				[&m](const char* start) {
-					m[0][3] = (float)readcif::str_to_float(start);
+					m[0][3] = (float)readcif::str_to_float(start) * m_scale;
 				});
 			pv.emplace_back(get_column("matrix[2][1]", Required),
 				[&m](const char* start) {
-					m[0][1] = (float)readcif::str_to_float(start);
+					m[1][0] = (float)readcif::str_to_float(start);
 				});
 			pv.emplace_back(get_column("matrix[2][2]", Required),
 				[&m](const char* start) {
@@ -276,19 +281,19 @@ return ret;
 				});
 			pv.emplace_back(get_column("matrix[2][3]", Required),
 				[&m](const char* start) {
-					m[2][1] = (float)readcif::str_to_float(start);
+					m[1][2] = (float)readcif::str_to_float(start);
 				});
 			pv.emplace_back(get_column("vector[2]", Required),
 				[&m](const char* start) {
-					m[1][3] = (float)readcif::str_to_float(start);
+					m[1][3] = (float)readcif::str_to_float(start) * m_scale;
 				});
 			pv.emplace_back(get_column("matrix[3][1]", Required),
 				[&m](const char* start) {
-					m[0][2] = (float)readcif::str_to_float(start);
+					m[2][0] = (float)readcif::str_to_float(start);
 				});
 			pv.emplace_back(get_column("matrix[3][2]", Required),
 				[&m](const char* start) {
-					m[1][2] = (float)readcif::str_to_float(start);
+					m[2][1] = (float)readcif::str_to_float(start);
 				});
 			pv.emplace_back(get_column("matrix[3][3]", Required),
 				[&m](const char* start) {
@@ -296,7 +301,7 @@ return ret;
 				});
 			pv.emplace_back(get_column("vector[3]", Required),
 				[&m](const char* start) {
-					m[2][3] = (float)readcif::str_to_float(start);
+					m[2][3] = (float)readcif::str_to_float(start) * m_scale;
 				});
 
 			while (parse_row(pv)) {
@@ -349,15 +354,15 @@ return ret;
 			// x, y, z are not required by mmCIF, but are by us
 			pv.emplace_back(get_column("Cartn_x", Required),
 				[&atom](const char* start) {
-					atom.x = (float)readcif::str_to_float(start);
+					atom.x = (float)readcif::str_to_float(start) * m_scale;
 				});
 			pv.emplace_back(get_column("Cartn_y", Required),
 				[&atom](const char* start) {
-					atom.y = (float)readcif::str_to_float(start);
+					atom.y = (float)readcif::str_to_float(start) * m_scale;
 				});
 			pv.emplace_back(get_column("Cartn_z", Required),
 				[&atom](const char* start) {
-					atom.z = (float)readcif::str_to_float(start);
+					atom.z = (float)readcif::str_to_float(start) * m_scale;
 				});
 			while (parse_row(pv)) {
 				atoms.push_back(atom);
@@ -369,15 +374,14 @@ return ret;
 			for (const Atom& atom : atoms) {
 				//danger this string conversion is super inefficient here.
 				std::string entity_id = atom.entity_id;
-				if (entities.find(entity_id) != entities.end()) {
+				/*if (entities.find(entity_id) != entities.end()) {
 					// add to existing
 					entities[entity_id].push_back(&atom);
 				}
 				else {
 					// first one
 					entities[entity_id] = { &atom };
-				}
-
+				}*/
 				std::string chain_id = atom.chain_id;
 				if (chains.find(chain_id) != chains.end()) {
 					// add to existing
@@ -387,11 +391,20 @@ return ret;
 					// first one
 					chains[chain_id] = { &atom };
 				}
+				if (entities.find(chain_id) != entities.end()) {
+					// add to existing
+					entities[chain_id]= entity_id;
+				}
+				else {
+					// first one
+					entities[chain_id] = entity_id;
+				}
 			}
 		}
 
 		std::vector<Atom> atoms;
-		std::unordered_map<std::string, std::vector<const Atom*>> entities;
+		//std::unordered_map<std::string, std::vector<const Atom*>> entities;
+		std::unordered_map<std::string, std::string> entities;
 		std::unordered_map<std::string, std::vector<const Atom*>> chains;
 		std::unordered_map<std::string, glm::mat4> transforms;
 		// each assembly has a list of asym units
@@ -405,6 +418,8 @@ return ret;
 		std::cout << "- loading '" << filename << "'... " << std::endl << std::flush;
 		const auto timer = std::chrono::high_resolution_clock::now();
 		const std::string materialPath = std::filesystem::path(filename).parent_path().string();
+		std::vector<float> AtomRadii{ 1.548f, 1.100f, 1.400f, 1.348f, 1.880f, 1.808f }; 
+		std::string AtomSymbols = "CHNOPS";
 
 		ExtractCIF extract;
 
@@ -416,21 +431,29 @@ return ret;
 			std::cerr << e.what() << std::endl;
 		}
 
+		std::unordered_map<std::string, glm::vec3> entity_colors;
 		std::vector<std::unique_ptr<Model>> newModels;
 		size_t nEntities = extract.chains.size();
 		if (nEntities > 0) {
 			std::unordered_map<std::string, Model*> modelMap;
 			for (auto e : extract.chains) {
 				size_t n = e.second.size();
-				std::cout << "Entity " << e.first << " has " << n << " atoms" << std::endl;
+				std::string entity = extract.entities[e.first];
+				std::cout << "Entity " << entity <<" chain " << e.first << " has " << n << " atoms" << std::endl;
+				if (entity_colors.find(entity) == entity_colors.end()) {
+					// first one
+					entity_colors[entity] = randomInBox(1.0, 1.0, 1.0) + glm::vec3(0.5, 0.5, 0.5);
+				}
 				std::vector<glm::vec3> vertices;
 				std::vector<float> radii;
 				for (size_t i = 0; i < n; ++i) {
 					const Atom* a = e.second[i];
 					vertices.push_back(glm::vec3(a->x, a->y, a->z));
-					radii.push_back(1.0f);
+					int it = AtomSymbols.find(a->atom_name[0]);
+					if (it != std::string::npos) radii.push_back(AtomRadii.at(it) * m_scale);//should be based on atom name
+					else radii.push_back(1.0f * m_scale);
 				}
-				auto model = Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(randomInBox(1.0, 1.0, 1.0) + glm::vec3(0.5, 0.5, 0.5)), true, filename + " :: " + e.first);
+				auto model = Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(entity_colors[entity]), true, filename + " :: " + e.first);
 				modelMap[e.first] = model;
 				newModels.push_back(std::unique_ptr<Model>(model));
 			}
@@ -456,6 +479,7 @@ return ret;
 								auto xformiter = extract.transforms.find(op);
 								if (xformiter == extract.transforms.end()) {
 									// ERROR
+									std::cout << "ERROR" << std::endl;
 								}
 								else {
 									glm::mat4 xform = xformiter->second;
@@ -466,7 +490,9 @@ return ret;
 									//}
 								}
 							}
+							//std::cout << " \n";
 						}
+						else std::cout << entityId << " not found \n";
 					}
 				}
 			}
@@ -492,7 +518,9 @@ return ret;
 			for (size_t i = 0; i < n; ++i) {
 				Atom& a = extract.atoms[i];
 				vertices.push_back(glm::vec3(a.x, a.y, a.z));
-				radii.push_back(1.0f);
+				int it = AtomSymbols.find(a.atom_name[0]);
+				if (it != std::string::npos) radii.push_back(AtomRadii.at(it) * m_scale);//should be based on atom name
+				else radii.push_back(1.0f * m_scale);
 			}
 			models.push_back(std::unique_ptr<Model>(Model::CreateSphereGroup(std::move(vertices), std::move(radii), Material::Lambertian(randomInBox(1.0,1.0,1.0) + glm::vec3(0.5, 0.5, 0.5)), true, filename)));
 		}

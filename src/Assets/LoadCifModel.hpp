@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+const float m_scale = 0.065f;
+
 namespace Assets
 {
 	struct Material;

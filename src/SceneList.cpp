@@ -370,15 +370,36 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	const auto identity = mat4(1);
 
 	std::vector<std::unique_ptr<Model>> models;
+	
+	const bool isProc = true;
+	//const float m_scale = 0.001f;
+
+	std::mt19937 engine(42);
+	std::function<float()> random = std::bind(std::uniform_real_distribution<float>(), engine);
+	
+	//AddRayTracingInOneWeekendCommonScene(models, isProc, random);
+	
 	//
 // create an instance for each model:
 	std::vector<ModelInstance> modelInstances;
 
 	Assets::LoadCIFAsScene(
 		//"C:\\Users\\dmt\\Downloads\\2plv.cif",
-		"C:\\Users\\dmt\\Downloads\\cellpack_atom_instances_1189_curated\\cellpack_atom_instances_1189_curated.cif",
+		//"C:\\Users\\ludov\\Documents\\MycoplasmaGenitalium\\Models\\cellpack_atom_instances_1189_curated.cif",
+		//"C:\\Users\\ludov\\Documents\\MycoplasmaGenitalium\\Models\\cellpack_atom_instances_149_curated.cif",
+		//"C:\\Users\\ludov\\Documents\\MycoplasmaGenitalium\\Models\\cellpack_atom_instances_6973_curated.cif",
+		//"C:\\Users\\ludov\\Downloads\\cellpack_atom_instances_149_curated\\cellpack_atom_instances_149_curated.cif",
+		//"C:\\Users\\ludov\\Downloads\\cellpack_atom_instances_149_curated\\cellpack_atom_instances_1189_curated.cif",
+		//"C:\\Users\\ludov\\Documents\\MycoplasmaGenitalium\\Models\\cellpack_atom_instances_small.cif",
+		"C:\\Users\\ludov\\Documents\\MycoplasmaGenitalium\\Models\\cellpack_atom_instances_clipped_lipids.cif",
+		//"C:\\Users\\ludov\\Downloads\\2plv.cif",
+		//"D:\\Data\\ISG_latest\\Results2022\\system.isg_mature_crystal\\cellpack_atom_instances.cif",
+		//"D:\\Data\\ISG_latest\\Results2022\\system.isg_mature_crystal\\cellpack_atom_lipids_instances.cif",
 		models, modelInstances);
-
+		//"C:\\Users\\dmt\\Downloads\\cellpack_atom_instances_1189_curated\\cellpack_atom_instances_1189_curated.cif",
+		//"C:\\Users\\ludov\\Documents\\MycoplasmaGenitalium\\Models\\cellpack_atom_instances_1189_curated.cif",
+		//"D:\\Dev\\cellPAINT3D_VR.git\\Data\\recipes\\2plv.cif",
+		// 
 	//models.push_back(std::unique_ptr<Model>(Assets::LoadCIF("C:\\Users\\dmt\\Downloads\\cellpack_atom_instances_1189_curated\\cellpack_atom_instances_1189_curated.cif", Material::Lambertian(glm::vec3(0.5, 0, 0)))));
 
 	for (int ii = 0; ii < 4; ++ii) {
@@ -416,7 +437,7 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 //	const int nInstancesPerModel = 2;
 //	const float volumeSize = 200.0f;
 	const int nInstancesPerModel = 0;
-	const float volumeSize = 5000.0f;
+	const float volumeSize = 500.0f * m_scale;
 	for (auto& m : models) {
 		for (int k = 0; k < nInstancesPerModel; ++k) {
 			modelInstances.push_back(ModelInstance(m.get(), glm::transpose(glm::translate(identity, randomInBox(volumeSize, volumeSize, volumeSize)) * glm::rotate(identity, frand() * 3.14159265f, randomInSphere(1.0)))));
@@ -431,17 +452,28 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 	}
 	std::cout << "NSPHERES " << nSpheres << std::endl;
 
-	auto domelight = Model::CreateSphere(vec3(0, 0, 0), volumeSize*10, Material::DiffuseLight(vec3(0.5f, 0.5f, 0.5f)), true);
-	models.push_back(std::unique_ptr<Model>(domelight));
-	modelInstances.push_back(ModelInstance(domelight));
+	//auto domelight = Model::CreateSphere(vec3(0, 0, 0), volumeSize*10, Material::DiffuseLight(vec3(1.0f, 1.0f, 1.0f)), true);
+	//models.push_back(std::unique_ptr<Model>(domelight));
+	//modelInstances.push_back(ModelInstance(domelight));
+	//
+	//models.push_back(std::unique_ptr<Model>(Model::CreateSphere(vec3(0, 300, 0)* m_scale, 5.0f, Material::Dielectric(1.5f), true)));
+	//models.push_back(std::unique_ptr<Model>(Model::CreateSphere(vec3(-40, 300, 0)* m_scale, 3.0f, Material::Lambertian(vec3(0.4f, 0.2f, 0.1f)), true)));
+	//models.push_back(std::unique_ptr<Model>(Model::CreateSphere(vec3(40, 300, 0)* m_scale, 3.0f, Material::Metallic(vec3(0.7f, 0.6f, 0.5f), 0.0f), true)));
 
-	camera.FieldOfView = 40;
+	// create an instance for each model:
+	//std::vector<ModelInstance> modelInstances;
+	//for (auto& m : models) {
+	//	modelInstances.push_back(ModelInstance(m.get()));
+	//}
+
+
+	camera.FieldOfView = 20;
 	camera.Aperture = 0.0f;
-	camera.ControlSpeed = 500.0f;
+	camera.ControlSpeed = 50.0f;
 	camera.GammaCorrection = true;
 	camera.FocusDistance = volumeSize/2.0f;
 	camera.ModelView = lookAt(vec3(0, 0, volumeSize), vec3(0, 0, 0), vec3(0, 1, 0));
-	camera.HasSky = false;
-
+	camera.HasSky = true;
+	
 	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }
