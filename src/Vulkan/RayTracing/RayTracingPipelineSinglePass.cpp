@@ -24,7 +24,18 @@ RayTracingPipelineSinglePass::RayTracingPipelineSinglePass(
 	const ImageView& outputImageView,
 	const std::vector<Assets::UniformBuffer>& uniformBuffers,
 	const Assets::Scene& scene) :
-	swapChain_(swapChain)
+	RayTracingPipelineBase(deviceProcedures, swapChain, accelerationStructure, accumulationImageView, outputImageView, uniformBuffers, scene)
+{
+
+}
+	
+void RayTracingPipelineSinglePass::init(const DeviceProcedures& deviceProcedures,
+			const SwapChain& swapChain,
+			const TopLevelAccelerationStructure& accelerationStructure,
+			const ImageView& accumulationImageView,
+			const ImageView& outputImageView,
+			const std::vector<Assets::UniformBuffer>& uniformBuffers,
+			const Assets::Scene& scene)
 {
 	// Create descriptor pool/sets.
 	const auto& device = swapChain.Device();
@@ -225,7 +236,7 @@ RayTracingPipelineSinglePass::RayTracingPipelineSinglePass(
 		"create ray tracing pipeline");
 }
 
-RayTracingPipelineSinglePass::~RayTracingPipelineSinglePass()
+void RayTracingPipelineSinglePass::uninit()
 {
 	if (pipeline_ != nullptr)
 	{
@@ -235,11 +246,6 @@ RayTracingPipelineSinglePass::~RayTracingPipelineSinglePass()
 
 	pipelineLayout_.reset();
 	descriptorSetManager_.reset();
-}
-
-VkDescriptorSet RayTracingPipelineSinglePass::DescriptorSet(const uint32_t index) const
-{
-	return descriptorSetManager_->DescriptorSets().Handle(index);
 }
 
 }

@@ -16,6 +16,7 @@
 
 namespace Vulkan::RayTracing {
 
+
 RayTracingPipeline::RayTracingPipeline(
 	const DeviceProcedures& deviceProcedures,
 	const SwapChain& swapChain,
@@ -24,7 +25,18 @@ RayTracingPipeline::RayTracingPipeline(
 	const ImageView& outputImageView,
 	const std::vector<Assets::UniformBuffer>& uniformBuffers,
 	const Assets::Scene& scene) :
-	swapChain_(swapChain)
+	RayTracingPipelineBase(deviceProcedures, swapChain, accelerationStructure, accumulationImageView, outputImageView, uniformBuffers, scene)
+{
+
+}
+
+void RayTracingPipeline::init(const DeviceProcedures& deviceProcedures,
+			const SwapChain& swapChain,
+			const TopLevelAccelerationStructure& accelerationStructure,
+			const ImageView& accumulationImageView,
+			const ImageView& outputImageView,
+			const std::vector<Assets::UniformBuffer>& uniformBuffers,
+			const Assets::Scene& scene)
 {
 	// Create descriptor pool/sets.
 	const auto& device = swapChain.Device();
@@ -128,7 +140,7 @@ RayTracingPipeline::RayTracingPipeline(
 
 		// Procedural buffer (optional)
 		VkDescriptorBufferInfo proceduralBufferInfo = {};
-		
+
 		if (scene.HasProcedurals())
 		{
 			proceduralBufferInfo.buffer = scene.ProceduralBuffer().Handle();
@@ -201,9 +213,9 @@ RayTracingPipeline::RayTracingPipeline(
 
 	std::vector<VkRayTracingShaderGroupCreateInfoKHR> groups =
 	{
-		rayGenGroupInfo, 
-		missGroupInfo, 
-		triangleHitGroupInfo, 
+		rayGenGroupInfo,
+		missGroupInfo,
+		triangleHitGroupInfo,
 		proceduralHitGroupInfo,
 	};
 
@@ -221,11 +233,11 @@ RayTracingPipeline::RayTracingPipeline(
 	pipelineInfo.basePipelineHandle = nullptr;
 	pipelineInfo.basePipelineIndex = 0;
 
-	Check(deviceProcedures.vkCreateRayTracingPipelinesKHR(device.Handle(), nullptr, nullptr, 1, &pipelineInfo, nullptr, &pipeline_), 
+	Check(deviceProcedures.vkCreateRayTracingPipelinesKHR(device.Handle(), nullptr, nullptr, 1, &pipelineInfo, nullptr, &pipeline_),
 		"create ray tracing pipeline");
 }
 
-RayTracingPipeline::~RayTracingPipeline()
+void RayTracingPipeline::uninit()
 {
 	if (pipeline_ != nullptr)
 	{
@@ -235,11 +247,6 @@ RayTracingPipeline::~RayTracingPipeline()
 
 	pipelineLayout_.reset();
 	descriptorSetManager_.reset();
-}
-
-VkDescriptorSet RayTracingPipeline::DescriptorSet(const uint32_t index) const
-{
-	return descriptorSetManager_->DescriptorSets().Handle(index);
 }
 
 }
