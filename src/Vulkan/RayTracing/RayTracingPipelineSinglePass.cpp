@@ -26,17 +26,6 @@ RayTracingPipelineSinglePass::RayTracingPipelineSinglePass(
 	const Assets::Scene& scene) :
 	RayTracingPipelineBase(deviceProcedures, swapChain, accelerationStructure, accumulationImageView, outputImageView, uniformBuffers, scene)
 {
-
-}
-	
-void RayTracingPipelineSinglePass::init(const DeviceProcedures& deviceProcedures,
-			const SwapChain& swapChain,
-			const TopLevelAccelerationStructure& accelerationStructure,
-			const ImageView& accumulationImageView,
-			const ImageView& outputImageView,
-			const std::vector<Assets::UniformBuffer>& uniformBuffers,
-			const Assets::Scene& scene)
-{
 	// Create descriptor pool/sets.
 	const auto& device = swapChain.Device();
 	const std::vector<DescriptorBinding> descriptorBindings =
@@ -236,7 +225,7 @@ void RayTracingPipelineSinglePass::init(const DeviceProcedures& deviceProcedures
 		"create ray tracing pipeline");
 }
 
-void RayTracingPipelineSinglePass::uninit()
+RayTracingPipelineSinglePass::~RayTracingPipelineSinglePass()
 {
 	if (pipeline_ != nullptr)
 	{

@@ -38,17 +38,8 @@ namespace Vulkan::RayTracing
 			const ImageView& outputImageView,
 			const std::vector<Assets::UniformBuffer>& uniformBuffers,
 			const Assets::Scene& scene);
+		~RayTracingPipelineSinglePass();
 
-
-	protected:
-		void init(const DeviceProcedures& deviceProcedures,
-			const SwapChain& swapChain,
-			const TopLevelAccelerationStructure& accelerationStructure,
-			const ImageView& accumulationImageView,
-			const ImageView& outputImageView,
-			const std::vector<Assets::UniformBuffer>& uniformBuffers,
-			const Assets::Scene& scene) override;
-		void uninit() override;
 	};
 
 }

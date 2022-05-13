@@ -27,17 +27,6 @@ RayTracingPipeline::RayTracingPipeline(
 	const Assets::Scene& scene) :
 	RayTracingPipelineBase(deviceProcedures, swapChain, accelerationStructure, accumulationImageView, outputImageView, uniformBuffers, scene)
 {
-
-}
-
-void RayTracingPipeline::init(const DeviceProcedures& deviceProcedures,
-			const SwapChain& swapChain,
-			const TopLevelAccelerationStructure& accelerationStructure,
-			const ImageView& accumulationImageView,
-			const ImageView& outputImageView,
-			const std::vector<Assets::UniformBuffer>& uniformBuffers,
-			const Assets::Scene& scene)
-{
 	// Create descriptor pool/sets.
 	const auto& device = swapChain.Device();
 	const std::vector<DescriptorBinding> descriptorBindings =
@@ -237,7 +226,7 @@ void RayTracingPipeline::init(const DeviceProcedures& deviceProcedures,
 		"create ray tracing pipeline");
 }
 
-void RayTracingPipeline::uninit()
+RayTracingPipeline::~RayTracingPipeline()
 {
 	if (pipeline_ != nullptr)
 	{

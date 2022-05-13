@@ -52,19 +52,6 @@ namespace Vulkan::RayTracing
 
 	protected:
 
-		virtual void init(const DeviceProcedures& deviceProcedures,
-			const SwapChain& swapChain,
-			const TopLevelAccelerationStructure& accelerationStructure,
-			const ImageView& accumulationImageView,
-			const ImageView& outputImageView,
-			const std::vector<Assets::UniformBuffer>& uniformBuffers,
-			const Assets::Scene& scene) {
-			assert(false);
-		}
-		virtual void uninit() {
-			assert(false);
-		}
-
 		const SwapChain& swapChain_;
 
 		std::unique_ptr<DescriptorSetManager> descriptorSetManager_;

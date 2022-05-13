@@ -26,12 +26,10 @@ RayTracingPipelineBase::RayTracingPipelineBase(
 	const Assets::Scene& scene) :
 	swapChain_(swapChain)
 {
-	init(deviceProcedures, swapChain, accelerationStructure, accumulationImageView, outputImageView, uniformBuffers, scene);
 }
 
 RayTracingPipelineBase::~RayTracingPipelineBase()
 {
-	uninit();
 }
 
 VkDescriptorSet RayTracingPipelineBase::DescriptorSet(const uint32_t index) const
