@@ -122,7 +122,17 @@ void RayTracer::DrawFrame()
 		CreateSwapChain();
 		return;
 	}
+	else if (renderer_ != userSettings_.Renderer) {
+		Device().WaitIdle();
+		DeleteSwapChain();
+		DeleteAccelerationStructures();
+		// LoadScene(userSettings_.SceneIndex);
+		CreateAccelerationStructures();
+		CreateSwapChain();
+		renderer_ = userSettings_.Renderer;
+		return;
 
+	}
 	// Check if the accumulation buffer needs to be reset.
 	if (resetAccumulation_ ||
 		userSettings_.RequiresAccumulationReset(previousSettings_) ||
@@ -155,7 +165,7 @@ void RayTracer::Render(VkCommandBuffer commandBuffer, const uint32_t imageIndex)
 	CheckAndUpdateBenchmarkState(prevTime);
 
 	// Render the scene
-	(userSettings_.Renderer == RendererType::ProgressivePathTracer)
+	(userSettings_.Renderer == RendererType::ProgressivePathTracer || userSettings_.Renderer == RendererType::SinglePassRayTracer)
 		? Vulkan::RayTracing::Application::Render(commandBuffer, imageIndex)
 		: Vulkan::Application::Render(commandBuffer, imageIndex);
 

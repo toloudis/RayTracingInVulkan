@@ -142,7 +142,8 @@ void Application::CreateSwapChain()
 	Vulkan::Application::CreateSwapChain();
 
 	CreateOutputImage();
-
+	// enforce deletion first
+	rayTracingPipeline_.reset();
 	rayTracingPipeline_.reset(new RayTracingPipeline(*deviceProcedures_, SwapChain(), topAs_[0], *accumulationImageView_, *outputImageView_, UniformBuffers(), GetScene()));
 
 	const std::vector<ShaderBindingTable::Entry> rayGenPrograms = { {rayTracingPipeline_->RayGenShaderIndex(), {}} };

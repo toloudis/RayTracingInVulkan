@@ -20,9 +20,9 @@ protected:
 	Assets::UniformBufferObject GetUniformBufferObject(VkExtent2D extent) const override;
 
 	void SetPhysicalDevice(
-		VkPhysicalDevice physicalDevice, 
-		std::vector<const char*>& requiredExtensions, 
-		VkPhysicalDeviceFeatures& deviceFeatures, 
+		VkPhysicalDevice physicalDevice,
+		std::vector<const char*>& requiredExtensions,
+		VkPhysicalDeviceFeatures& deviceFeatures,
 		void* nextDeviceFeatures) override;
 
 	void OnDeviceSet() override;
@@ -43,6 +43,7 @@ private:
 	void CheckFramebufferSize() const;
 
 	uint32_t sceneIndex_{};
+	RendererType renderer_{RendererType::ProgressivePathTracer};
 	UserSettings userSettings_{};
 	UserSettings previousSettings_{};
 	SceneList::CameraInitialSate cameraInitialSate_{};
