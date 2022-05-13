@@ -29,14 +29,14 @@ namespace Vulkan::RayTracing
 			std::vector<const char*>& requiredExtensions,
 			VkPhysicalDeviceFeatures& deviceFeatures,
 			void* nextDeviceFeatures) override;
-		
+
 		void OnDeviceSet() override;
 		void CreateAccelerationStructures();
 		void DeleteAccelerationStructures();
 		void CreateSwapChain() override;
 		void DeleteSwapChain() override;
 		void Render(VkCommandBuffer commandBuffer, uint32_t imageIndex) override;
-			   
+
 	private:
 
 		void CreateBottomLevelStructures(VkCommandBuffer commandBuffer);
@@ -66,8 +66,8 @@ namespace Vulkan::RayTracing
 		std::unique_ptr<Image> outputImage_;
 		std::unique_ptr<DeviceMemory> outputImageMemory_;
 		std::unique_ptr<ImageView> outputImageView_;
-		
-		std::unique_ptr<class RayTracingPipeline> rayTracingPipeline_;
+
+		std::unique_ptr<class RayTracingPipelineBase> rayTracingPipeline_;
 		std::unique_ptr<class ShaderBindingTable> shaderBindingTable_;
 	};
 

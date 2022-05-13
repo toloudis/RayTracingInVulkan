@@ -39,7 +39,6 @@ namespace Vulkan::RayTracing
 			const std::vector<Assets::UniformBuffer>& uniformBuffers,
 			const Assets::Scene& scene);
 		~RayTracingPipelineSinglePass();
-
 	};
 
 }

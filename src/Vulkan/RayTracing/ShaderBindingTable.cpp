@@ -1,6 +1,6 @@
 #include "ShaderBindingTable.hpp"
 #include "DeviceProcedures.hpp"
-#include "RayTracingPipeline.hpp"
+#include "RayTracingPipelineBase.hpp"
 #include "RayTracingProperties.hpp"
 #include "Utilities/Exception.hpp"
 #include "Vulkan/Buffer.hpp"
@@ -34,10 +34,10 @@ namespace
 	}
 
 	size_t CopyShaderData(
-		uint8_t* const dst, 
-		const RayTracingProperties& rayTracingProperties, 
-		const std::vector<ShaderBindingTable::Entry>& entries, 
-		const size_t entrySize, 
+		uint8_t* const dst,
+		const RayTracingProperties& rayTracingProperties,
+		const std::vector<ShaderBindingTable::Entry>& entries,
+		const size_t entrySize,
 		const uint8_t* const shaderHandleStorage)
 	{
 		const auto handleSize = rayTracingProperties.ShaderGroupHandleSize();
@@ -59,17 +59,17 @@ namespace
 }
 
 ShaderBindingTable::ShaderBindingTable(
-	const DeviceProcedures& deviceProcedures, 
-	const RayTracingPipeline& rayTracingPipeline,
+	const DeviceProcedures& deviceProcedures,
+	const RayTracingPipelineBase& rayTracingPipeline,
 	const RayTracingProperties& rayTracingProperties,
 	const std::vector<Entry>& rayGenPrograms,
-	const std::vector<Entry>& missPrograms, 
+	const std::vector<Entry>& missPrograms,
 	const std::vector<Entry>& hitGroups) :
-	
+
 	rayGenEntrySize_(GetEntrySize(rayTracingProperties, rayGenPrograms)),
 	missEntrySize_(GetEntrySize(rayTracingProperties, missPrograms)),
 	hitGroupEntrySize_(GetEntrySize(rayTracingProperties, hitGroups)),
-	
+
 	rayGenOffset_(0),
 	missOffset_(rayGenPrograms.size() * rayGenEntrySize_),
 	hitGroupOffset_(missOffset_ + missPrograms.size() * missEntrySize_),
@@ -96,14 +96,14 @@ ShaderBindingTable::ShaderBindingTable(
 	std::vector<uint8_t> shaderHandleStorage(groupCount * handleSize);
 
 	Check(deviceProcedures.vkGetRayTracingShaderGroupHandlesKHR(
-		device.Handle(), 
-		rayTracingPipeline.Handle(), 
+		device.Handle(),
+		rayTracingPipeline.Handle(),
 		0, static_cast<uint32_t>(groupCount),
 		shaderHandleStorage.size(),
-		shaderHandleStorage.data()), 
+		shaderHandleStorage.data()),
 		"get ray tracing shader group handles");
 
-	// Copy the shader identifiers followed by their resource pointers or root constants: 
+	// Copy the shader identifiers followed by their resource pointers or root constants:
 	// first the ray generation, then the miss shaders, and finally the set of hit groups.
 	auto* pData = static_cast<uint8_t*>(bufferMemory_->Map(0, sbtSize));
 

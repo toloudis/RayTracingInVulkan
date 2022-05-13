@@ -62,7 +62,7 @@ void Application::SetPhysicalDevice(
 {
 	// Required extensions.
 	requiredExtensions.insert(requiredExtensions.end(),
-	{	
+	{
 		VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
 		VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
 		VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME
@@ -84,7 +84,7 @@ void Application::SetPhysicalDevice(
 	accelerationStructureFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
 	accelerationStructureFeatures.pNext = &indexingFeatures;
 	accelerationStructureFeatures.accelerationStructure = true;
-	
+
 	VkPhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingFeatures = {};
 	rayTracingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
 	rayTracingFeatures.pNext = &accelerationStructureFeatures;
@@ -214,7 +214,7 @@ void Application::Render(VkCommandBuffer commandBuffer, const uint32_t imageInde
 		extent.width, extent.height, 1);
 
 	// Acquire output image and swap-chain image for copying.
-	ImageMemoryBarrier::Insert(commandBuffer, outputImage_->Handle(), subresourceRange, 
+	ImageMemoryBarrier::Insert(commandBuffer, outputImage_->Handle(), subresourceRange,
 		VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
 	ImageMemoryBarrier::Insert(commandBuffer, SwapChain().Images()[imageIndex], subresourceRange, 0,
@@ -241,7 +241,7 @@ void Application::CreateBottomLevelStructures(VkCommandBuffer commandBuffer)
 {
 	const auto& scene = GetScene();
 	const auto& debugUtils = Device().DebugUtils();
-	
+
 	// Bottom level acceleration structure
 	// Triangles via vertex buffers. Procedurals via AABBs.
 	uint32_t vertexOffset = 0;
@@ -253,7 +253,7 @@ void Application::CreateBottomLevelStructures(VkCommandBuffer commandBuffer)
 		const auto vertexCount = static_cast<uint32_t>(model->NumberOfVertices());
 		const auto indexCount = static_cast<uint32_t>(model->NumberOfIndices());
 		BottomLevelGeometry geometries;
-		
+
 		model->Procedural()
 			? geometries.AddGeometryAabb(scene, aabbOffset, (uint32_t)model->Procedural()->NumBoundingBoxes(), true)
 			: geometries.AddGeometryTriangles(scene, vertexOffset, vertexCount, indexOffset, indexCount, true);
@@ -286,7 +286,7 @@ void Application::CreateBottomLevelStructures(VkCommandBuffer commandBuffer)
 	for (size_t i = 0; i != bottomAs_.size(); ++i)
 	{
 		bottomAs_[i].Generate(commandBuffer, *bottomScratchBuffer_, scratchOffset, *bottomBuffer_, resultOffset);
-		
+
 		resultOffset += bottomAs_[i].BuildSizes().accelerationStructureSize;
 		scratchOffset += bottomAs_[i].BuildSizes().buildScratchSize;
 
@@ -329,7 +329,7 @@ void Application::CreateTopLevelStructures(VkCommandBuffer commandBuffer)
 
 	// Memory barrier for the bottom level acceleration structure builds.
 	AccelerationStructure::MemoryBarrier(commandBuffer);
-	
+
 	topAs_.emplace_back(*deviceProcedures_, *rayTracingProperties_, instancesBuffer_->GetDeviceAddress(), static_cast<uint32_t>(instances.size()));
 
 	// Allocate the structure memory.
@@ -341,7 +341,7 @@ void Application::CreateTopLevelStructures(VkCommandBuffer commandBuffer)
 	topScratchBuffer_.reset(new Buffer(Device(), total.buildScratchSize, VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 	topScratchBufferMemory_.reset(new DeviceMemory(topScratchBuffer_->AllocateMemory(VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)));
 
-	
+
 	debugUtils.SetObjectName(topBuffer_->Handle(), "TLAS Buffer");
 	debugUtils.SetObjectName(topBufferMemory_->Handle(), "TLAS Memory");
 	debugUtils.SetObjectName(topScratchBuffer_->Handle(), "TLAS Scratch Buffer");
@@ -370,11 +370,11 @@ void Application::CreateOutputImage()
 	outputImageView_.reset(new ImageView(Device(), outputImage_->Handle(), format, VK_IMAGE_ASPECT_COLOR_BIT));
 
 	const auto& debugUtils = Device().DebugUtils();
-	
+
 	debugUtils.SetObjectName(accumulationImage_->Handle(), "Accumulation Image");
 	debugUtils.SetObjectName(accumulationImageMemory_->Handle(), "Accumulation Image Memory");
 	debugUtils.SetObjectName(accumulationImageView_->Handle(), "Accumulation ImageView");
-	
+
 	debugUtils.SetObjectName(outputImage_->Handle(), "Output Image");
 	debugUtils.SetObjectName(outputImageMemory_->Handle(), "Output Image Memory");
 	debugUtils.SetObjectName(outputImageView_->Handle(), "Output ImageView");

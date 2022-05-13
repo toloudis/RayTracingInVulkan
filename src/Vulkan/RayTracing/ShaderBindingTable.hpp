@@ -16,9 +16,9 @@ namespace Vulkan
 namespace Vulkan::RayTracing
 {
 	class DeviceProcedures;
-	class RayTracingPipeline;
+	class RayTracingPipelineBase;
 	class RayTracingProperties;
-	
+
 	class ShaderBindingTable final
 	{
 	public:
@@ -33,7 +33,7 @@ namespace Vulkan::RayTracing
 
 		ShaderBindingTable(
 			const DeviceProcedures& deviceProcedures,
-			const RayTracingPipeline& rayTracingPipeline,
+			const RayTracingPipelineBase& rayTracingPipeline,
 			const RayTracingProperties& rayTracingProperties,
 			const std::vector<Entry>& rayGenPrograms,
 			const std::vector<Entry>& missPrograms,
