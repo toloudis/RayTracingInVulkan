@@ -293,7 +293,7 @@ CIFFile::parse_file(const char* filename)
 #ifdef _WIN32
 	size_t len = strlen(filename);
 	std::vector<wchar_t> wfilename(len + 1);
-	MultiByteToWideChar(CP_UTF8, 0, filename, len, &wfilename[0], len + 1);
+	MultiByteToWideChar(CP_UTF8, 0, filename, (int)len, &wfilename[0], (int)(len + 1));
 	HANDLE file = CreateFileW(&wfilename[0], GENERIC_READ, FILE_SHARE_READ, NULL,
 			OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (file == INVALID_HANDLE_VALUE) {
@@ -333,7 +333,7 @@ CIFFile::parse_file(const char* filename)
 	} else {
 		buffer = new char [size.QuadPart + 1];
 		DWORD bytes_read;
-		if (!ReadFile(file, buffer, size.QuadPart, &bytes_read, 0)) {
+		if (!ReadFile(file, buffer, (DWORD)size.QuadPart, &bytes_read, 0)) {
 			DWORD err_num = GetLastError();
 			CloseHandle(file);
 			throw_windows_error(err_num, "reading file");
@@ -445,7 +445,7 @@ CIFFile::parse(const char* buffer)
 		internal_parse();
 		parsing = false;
 		finished_parse();
-	} catch (std::exception &e) {
+	} catch (std::exception &/*e*/) {
 		parsing = false;
 		throw;
 	}
@@ -1153,7 +1153,7 @@ CIFFile::find_column_offsets()
 		--start;	// must have had a leading quote
 	if (is_not_eol(*(start - 1)))
 		return offsets;	// isn't at start of line, so not stylized
-	int size = current_colnames.size();
+	size_t size = current_colnames.size();
 	offsets.reserve(size + 1);	// save one extra for end of line
 	offsets.push_back(0);	// first column starts at beginning of line
 	const char* save_pos = pos;
@@ -1161,10 +1161,10 @@ CIFFile::find_column_offsets()
 	for (int i = 1; i != size; ++i) {
 		next_token();
 		if (is_whitespace(*(current_value_start - 1)))
-			offsets.push_back(current_value_start - start);
+			offsets.push_back((int)(current_value_start - start));
 		else {
 			// must have had a leading quote
-			offsets.push_back(current_value_start - start - 1);
+			offsets.push_back((int)(current_value_start - start - 1));
 		}
 	}
 	if (lineno != save_lineno) {
@@ -1180,7 +1180,7 @@ CIFFile::find_column_offsets()
 			++current_value_end;
 		if (*current_value_end == '\r' && *(current_value_end + 1) == '\n')
 			++current_value_end;	// check for DOS line ending
-		offsets.push_back(current_value_end - start);
+		offsets.push_back((int)(current_value_end - start));
 #else
 		// The extra slot to be filled in later -- if stylized lines are
 		// fixed length, then this could be filled in now.
@@ -1203,7 +1203,7 @@ CIFFile::get_column(const char* name, bool required)
 #endif
 	auto i = std::find(current_colnames.begin(), current_colnames.end(), colname);
 	if (i != current_colnames.end())
-		return i - current_colnames.begin();
+		return (int)(i - current_colnames.begin());
 	if (!required)
 		return -1;
 	std::ostringstream err_msg;
@@ -1284,7 +1284,8 @@ CIFFile::parse_row(ParseValues& pv)
 #endif
 			return true;
 		}
-		for (int i = 0, e = current_colnames.size(); i < e; ++i) {
+		size_t e = current_colnames.size();
+		for (int i = 0; i < e; ++i) {
 			if (current_token != T_VALUE) {
 				std::ostringstream err_msg;
 				err_msg << "not enough data values, found "
@@ -1351,7 +1352,8 @@ CIFFile::parse_row(ParseValues& pv)
 #endif
 		return true;
 	}
-	for (int i = 0, e = current_colnames.size(); i < e; ++i) {
+	size_t e = current_colnames.size();
+	for (int i = 0; i < e; ++i) {
 		if (current_token != T_VALUE) {
 			std::ostringstream err_msg;
 			err_msg << "not enough data values, found"
@@ -1519,7 +1521,7 @@ CIFFile::parse_audit_conform()
 			[&dict_version] (const char* start) {
 				dict_version = strtof(start, NULL);
 			});
-	} catch (std::runtime_error& e) {
+	} catch (std::runtime_error& /*e*/) {
 		return;
 	}
 	parse_row(pv);
@@ -1557,7 +1559,7 @@ CIFFile::parse_audit_syntax()
 					fixed_width.push_back(string(start, cp - start));
 				}
 			});
-	} catch (std::runtime_error& e) {
+	} catch (std::runtime_error& /*e*/) {
 		return;
 	}
 	parse_row(pv);
