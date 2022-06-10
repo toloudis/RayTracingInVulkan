@@ -376,7 +376,7 @@ SceneAssets SceneList::Molecules(CameraInitialSate& camera) {
 
 	Assets::LoadCIFAsScene(
 		//"C:\\Users\\dmt\\Downloads\\2plv.cif",
-		"C:\\Users\\dmt\\Downloads\\cellpack_atom_instances_1189_curated\\cellpack_atom_instances_1189_curated.cif",
+		"C:\\Users\\danielt\\Downloads\\cellpack_atom_instances_1189_curated\\cellpack_atom_instances_1189_curated.cif",
 		models, modelInstances);
 
 	//models.push_back(std::unique_ptr<Model>(Assets::LoadCIF("C:\\Users\\dmt\\Downloads\\cellpack_atom_instances_1189_curated\\cellpack_atom_instances_1189_curated.cif", Material::Lambertian(glm::vec3(0.5, 0, 0)))));

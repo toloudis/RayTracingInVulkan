@@ -48,6 +48,7 @@ if (UNIX)
 endif ()
 
 find_package(Boost REQUIRED COMPONENTS exception program_options) 
+find_package(CURL CONFIG REQUIRED)
 find_package(freetype CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
