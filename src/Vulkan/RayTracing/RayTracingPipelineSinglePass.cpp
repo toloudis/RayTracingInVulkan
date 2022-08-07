@@ -143,11 +143,11 @@ RayTracingPipelineSinglePass::RayTracingPipelineSinglePass(
 	pipelineLayout_.reset(new class PipelineLayout(device, descriptorSetManager_->DescriptorSetLayout()));
 
 	// Load shaders.
-	const ShaderModule rayGenShader(device, "../assets/shaders/RayTracing.rgen.spv");
-	const ShaderModule missShader(device, "../assets/shaders/RayTracing.rmiss.spv");
-	const ShaderModule closestHitShader(device, "../assets/shaders/RayTracing.rchit.spv");
-	const ShaderModule proceduralClosestHitShader(device, "../assets/shaders/RayTracing.Procedural.rchit.spv");
-	const ShaderModule proceduralIntersectionShader(device, "../assets/shaders/RayTracing.Procedural.rint.spv");
+	const ShaderModule rayGenShader(device, "../assets/shaders/RayTracingSimple.rgen.spv");
+	const ShaderModule missShader(device, "../assets/shaders/RayTracingSimple.rmiss.spv");
+	const ShaderModule closestHitShader(device, "../assets/shaders/RayTracingSimple.rchit.spv");
+	const ShaderModule proceduralClosestHitShader(device, "../assets/shaders/RayTracingSimple.Procedural.rchit.spv");
+	const ShaderModule proceduralIntersectionShader(device, "../assets/shaders/RayTracingSimple.Procedural.rint.spv");
 
 	std::vector<VkPipelineShaderStageCreateInfo> shaderStages =
 	{
