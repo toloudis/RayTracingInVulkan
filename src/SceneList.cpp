@@ -329,7 +329,7 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	std::ifstream inputstream(filePath);
 	nlohmann::json j;
 	inputstream >> j;
-	aics::simularium::fileio::SimulariumFileReader reader;
+	aics::simularium::fileio::SimulariumFileReaderJson reader;
 	aics::simularium::TrajectoryFrame trajectoryFrame;
 	bool ok = reader.DeserializeFrame(
 			j,

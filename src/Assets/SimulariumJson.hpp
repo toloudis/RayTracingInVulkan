@@ -70,12 +70,46 @@ namespace simularium {
 
     namespace fileio {
 
-        class SimulariumFileReader {
+        class ISimulariumFile {
+            virtual TrajectoryFileProperties getTrajectoryFileInfo() = 0;
+            // virtual std::vector<Plot> getPlotData() = 0;
+            virtual size_t getNumFrames() = 0;
+            //virtual size_t getFrameIndexAtTime(float time) = 0;
+            virtual void getFrame(size_t theFrameNumber, TrajectoryFrame* frame) = 0;
+        };
+
+		
+        class SimulariumFileReaderJson : public ISimulariumFile {
         public:
+            SimulariumFileReaderJson(std::string filePath);
+
             bool DeserializeFrame(
                 nlohmann::json& jsonRoot,
                 std::size_t frameNumber,
                 TrajectoryFrame& outFrame);
+
+
+            virtual TrajectoryFileProperties getTrajectoryFileInfo();
+            // virtual std::vector<Plot> getPlotData() = 0;
+            virtual size_t getNumFrames();
+            //virtual size_t getFrameIndexAtTime(float time);
+            virtual void getFrame(size_t theFrameNumber, TrajectoryFrame* frame);
+        private:
+            nlohmann::json mJsonRoot;
+
+        };
+
+        class SimulariumFileReaderBinary : public ISimulariumFile {
+        public:
+            SimulariumFileReaderBinary(std::string filePath);
+
+            virtual TrajectoryFileProperties getTrajectoryFileInfo();
+            // virtual std::vector<Plot> getPlotData() = 0;
+            virtual size_t getNumFrames();
+            //virtual size_t getFrameIndexAtTime(float time);
+            virtual void getFrame(size_t theFrameNumber, TrajectoryFrame* frame);
+        private:
+
         };
 
     } // namespace fileio

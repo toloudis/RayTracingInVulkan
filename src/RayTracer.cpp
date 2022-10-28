@@ -272,6 +272,8 @@ void RayTracer::OnScroll(const double xoffset, const double yoffset)
 
 void RayTracer::LoadScene(const uint32_t sceneIndex)
 {
+	// create the scene!
+
 	auto [modelInstances, models, textures] = SceneList::AllScenes[sceneIndex].second(cameraInitialSate_);
 
 	// If there are no texture, add a dummy one. It makes the pipeline setup a lot easier.
