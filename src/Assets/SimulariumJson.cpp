@@ -6,6 +6,28 @@
 
 namespace aics {
 namespace simularium {
+    void TrajectoryFileProperties::fromJson(const nlohmann::json& fprops) {
+        const nlohmann::json& typeMapping = fprops["typeMapping"];
+
+        for (auto it = typeMapping.begin(); it != typeMapping.end(); ++it)
+        {
+            std::size_t idKey = std::atoi(it.key().c_str());
+            const nlohmann::json& entry = it.value();
+            this->typeMapping[idKey] = entry["name"].get<std::string>();
+        }
+
+        const nlohmann::json& size = fprops["size"];
+        boxX = size["x"].get<float>();
+        boxY = size["y"].get<float>();
+        boxZ = size["z"].get<float>();
+
+        fileName = fprops["fileName"].get<std::string>();
+        numberOfFrames = fprops["totalSteps"].get<int>();
+        timeStepSize = fprops["timeStepSize"].get<float>();
+        spatialUnitFactorMeters = fprops["spatialUnitFactorMeters"].get<float>();
+
+    }
+
     namespace fileio {
 
         SimulariumFileReaderJson::SimulariumFileReaderJson(std::string filePath) {
@@ -15,28 +37,9 @@ namespace simularium {
         }
         TrajectoryFileProperties SimulariumFileReaderJson::getTrajectoryFileInfo() {
             nlohmann::json& fprops = mJsonRoot["trajectoryInfo"];
-
 			
             TrajectoryFileProperties tfp;
-
-            const nlohmann::json& typeMapping = fprops["typeMapping"];
-
-            for (auto it = typeMapping.begin(); it != typeMapping.end(); ++it)
-            {
-                std::size_t idKey = std::atoi(it.key().c_str());
-                const nlohmann::json& entry = it.value();
-                tfp.typeMapping[idKey] = entry["name"].get<std::string>();
-            }
-
-            const nlohmann::json& size = fprops["size"];
-            tfp.boxX = size["x"].get<float>();
-            tfp.boxY = size["y"].get<float>();
-            tfp.boxZ = size["z"].get<float>();
-
-            tfp.fileName = fprops["fileName"].get<std::string>();
-            tfp.numberOfFrames = fprops["totalSteps"].get<int>();
-            tfp.timeStepSize = fprops["timeStepSize"].get<float>();
-            tfp.spatialUnitFactorMeters = fprops["spatialUnitFactorMeters"].get<float>();
+            tfp.fromJson(fprops);
 
             return tfp;
         }
@@ -96,37 +99,179 @@ namespace simularium {
             return true;
         }
 
-        SimulariumFileReaderBinary::SimulariumFileReaderBinary(std::string filePath) {}
+        SimulariumFileReaderBinary::SimulariumFileReaderBinary(std::string filePath) {
+            mFilePath = filePath;
 
-        TrajectoryFileProperties SimulariumFileReaderBinary::getTrajectoryFileInfo() { return TrajectoryFileProperties(); }
+            nFrames = 0;
+            //frameOffsets = [];
+            //frameLengths = [];
+            header = readHeader();
+            //tfi = readTrajectoryFileInfo();
+            //plotData = readPlotData();
+            //spatialDataBlock = readSpatialDataInfo();
+        }
+
+        TrajectoryFileProperties SimulariumFileReaderBinary::getTrajectoryFileInfo() { 
+            // find the first block that is a trajectory info block
+            for (auto block: this->header.blocks) {
+                if (block.type == BlockTypeEnum::TRAJECTORY_INFO_JSON) {
+                    nlohmann::json json = this->parseJsonBlock(block);
+                    TrajectoryFileProperties tfp;
+                    tfp.fromJson(json);
+                    return tfp;
+                }
+            }
+            throw ("No trajectory info block found");
+        }
+		
         // virtual std::vector<Plot> getPlotData() = 0;
         size_t SimulariumFileReaderBinary::getNumFrames() { return 0; }
         //virtual size_t getFrameIndexAtTime(float time);
         void SimulariumFileReaderBinary::getFrame(size_t theFrameNumber, TrajectoryFrame* frame) {}
 
-		
-        const enum BlockTypeEnum {
-            // type = 0 : spatial data block in JSON
-            SPATIAL_DATA_JSON = 0,
-            // type = 1 : trajectory info block in JSON
-            TRAJECTORY_INFO_JSON = 1,
-            // type = 2 : plot data block in JSON
-            PLOT_DATA_JSON = 2,
-            // type = 3 : spatial data block in binary
-            SPATIAL_DATA_BINARY = 3,
-        };
-
-        struct BlockInfo {
-            BlockTypeEnum type;
-            uint32_t offset;
-            uint32_t size;
-        };
-        struct Header {
-            uint32_t version;
-            std::vector<BlockInfo> blocks;
-        };
         const std::string SIGNATURE = "SIMULARIUMBINARY";
 
+        bool SimulariumFileReaderBinary::isBinarySimulariumFile(std::string filePath) {
+            std::fstream f1;
+            uint8_t signature[16];
+
+            f1.open(filePath, std::ios::in | std::ios::binary);
+            f1.read((char*)signature, 16);
+			std::string s((char*)signature, 16);
+			f1.close();
+
+			return s == SIGNATURE;
+		}
+        SimulariumFileReaderBinary::Header SimulariumFileReaderBinary::readHeader() {
+            std::fstream is(mFilePath, std::ios::in | std::ios::binary);
+            // get length of file:
+            is.seekg(0, is.end);
+            size_t length = is.tellg();
+			// start after signature
+            is.seekg(SIGNATURE.size(), is.beg);
+            uint32_t headerLength = 0;
+            is.read((char*)&headerLength, 4);
+            uint32_t headerVersion = 0;
+            is.read((char*)&headerVersion, 4);
+            uint32_t nBlocks = 0;
+            is.read((char*)&nBlocks, 4);
+            if (nBlocks < 1) {
+                throw ("No blocks found in file");
+            }
+
+            std::vector<BlockInfo> blocks(nBlocks);
+            // the number of 32-bit ints after the SIGNATURE and before the toc
+            const int OFFSET_TO_TABLE_OF_CONTENTS = 3;
+            for (int i = 0; i < nBlocks; i++) {
+                BlockInfo bi;
+				is.read((char*)&bi.offset, 4);
+				is.read((char*)&bi.type, 4);
+				is.read((char*)&bi.size, 4);
+                blocks.push_back(bi);
+            }
+            if (blocks[0].offset != headerLength) {
+                throw ("First block offset does not match header length");
+            }
+            return {
+                headerVersion,
+                blocks,
+            };
+        }
+
+        uint8_t* SimulariumFileReaderBinary::getBlockContent(const SimulariumFileReaderBinary::BlockInfo& block) {
+            std::fstream is(mFilePath, std::ios::in | std::ios::binary);
+
+            // return the block portion after the block header
+            // first validate the block with what we expect.
+
+            // TAKE NOTE OF ENDIANNESS.
+            // Data transferred via HTTP is generally big endian.
+            // Local file should have been written as little endian.
+            // All use of DataViews requires explicit endianness but default to big endian.
+            // TypedArrays use the underlying system endianness (usually little).
+            is.seekg(block.offset, is.beg);
+            const uint32_t blockType = 0;
+            is.read((char*)&blockType, 4);
+            const uint32_t blockSize = 0;
+			is.read((char*)&blockSize, 4);
+
+            if (blockType != block.type) {
+                throw (
+                    "Block type mismatch.  Header says " +
+                        block.type +
+                        " but block says " +
+                        blockType
+                );
+            }
+            if (blockSize != block.size) {
+                throw (
+                    "Block size mismatch.  Header says " +
+                        block.size +
+                        " but block says " +
+                        blockSize
+                );
+            }
+            // note: NOT a copy.
+            // never produce copies internally. let callers make a copy if they need it.
+            // also note: return the contents of the block NOT including the block header
+            size_t nbytesToRead = block.size - BLOCK_HEADER_SIZE;
+			uint8_t* data = new uint8_t[nbytesToRead];
+            is.seekg(block.offset+BLOCK_HEADER_SIZE, is.beg);
+			is.read((char*)data, nbytesToRead);
+            return data;
+        }
+
+        uint8_t* SimulariumFileReaderBinary::getBlock(const SimulariumFileReaderBinary::BlockInfo& block) {
+            std::fstream is(mFilePath, std::ios::in | std::ios::binary);
+
+            // return the block portion after the block header
+            // first validate the block with what we expect.
+
+            // TAKE NOTE OF ENDIANNESS.
+            // Data transferred via HTTP is generally big endian.
+            // Local file should have been written as little endian.
+            // All use of DataViews requires explicit endianness but default to big endian.
+            // TypedArrays use the underlying system endianness (usually little).
+            is.seekg(block.offset, is.beg);
+            const uint32_t blockType = 0;
+            is.read((char*)&blockType, 4);
+            const uint32_t blockSize = 0;
+            is.read((char*)&blockSize, 4);
+
+            if (blockType != block.type) {
+                throw (
+                    "Block type mismatch.  Header says " +
+                    block.type +
+                    " but block says " +
+                    blockType
+                    );
+            }
+            if (blockSize != block.size) {
+                throw (
+                    "Block size mismatch.  Header says " +
+                    block.size +
+                    " but block says " +
+                    blockSize
+                    );
+            }
+            // note: NOT a copy.
+            // never produce copies internally. let callers make a copy if they need it.
+            // also note: return the contents of the block NOT including the block header
+            size_t nbytesToRead = block.size;
+            uint8_t* data = new uint8_t[nbytesToRead];
+            is.seekg(block.offset, is.beg);
+            is.read((char*)data, nbytesToRead);
+            return data;
+        }
+
+        nlohmann::json SimulariumFileReaderBinary::parseJsonBlock(const SimulariumFileReaderBinary::BlockInfo& block){
+            auto blockData = this->getBlockContent(block);
+			std::string text((char*)blockData, block.size-BLOCK_HEADER_SIZE);
+            nlohmann::json json = nlohmann::json::parse(text);
+            return json;
+        }
+
+		
         // each block has a type and a size
         const uint32_t BLOCK_HEADER_SIZE = 8;
 
@@ -152,12 +297,6 @@ namespace simularium {
                 this.spatialDataBlock = this.readSpatialDataInfo();
             }
 
-            static isBinarySimulariumFile(fileContents: Blob) : Promise<boolean>{
-                const first16blob : Blob = fileContents.slice(0, 16);
-                return first16blob.text().then((text) = > {
-                    return text == = SIGNATURE;
-                });
-            }
 
                 private readSpatialDataInfo() : DataView{
                 // find spatial data block and load frame offsets
@@ -190,138 +329,9 @@ namespace simularium {
                 throw new Error("No spatial data block found");
             }
 
-                private readHeader() : Header{
-                // could use DataView here but I know every header field is int32
-                // note I set the offset to move past the signature string
-                const asints = new Uint32Array(this.fileContents, SIGNATURE.length);
-                const headerLength = asints[0];
-                const headerVersion = asints[1];
-                const nBlocks = asints[2];
-                if (nBlocks < 1) {
-                    throw new Error("No blocks found in file");
-                }
-                const blocks : BlockInfo[] = [];
-                // the number of 32-bit ints after the SIGNATURE and before the toc
-                const OFFSET_TO_TABLE_OF_CONTENTS = 3;
-                for (let i = 0; i < nBlocks; i++) {
-                    blocks.push({
-                        offset: asints[OFFSET_TO_TABLE_OF_CONTENTS + i * 3 + 0],
-                        type : asints[OFFSET_TO_TABLE_OF_CONTENTS + i * 3 + 1],
-                        size : asints[OFFSET_TO_TABLE_OF_CONTENTS + i * 3 + 2],
-                    });
-                }
-                if (blocks[0].offset != = headerLength) {
-                    throw new Error("First block offset does not match header length");
-                }
-                return {
-                    version: headerVersion,
-                    blocks,
-                };
-            }
 
-                private readTrajectoryFileInfo() : TrajectoryFileInfo{
-                // find the first block that is a trajectory info block
-                for (const block of this.header.blocks) {
-                    if (block.type == = BlockTypeEnum.TRAJECTORY_INFO_JSON) {
-                        const json = this.parseJsonBlock(block);
-                        return json as TrajectoryFileInfo;
-                    }
-                }
-                throw new Error("No trajectory info block found");
-            }
 
-                private readPlotData() : Plot[]{
-                // find the first block that is a trajectory info block
-                for (const block of this.header.blocks) {
-                    if (block.type == = BlockTypeEnum.PLOT_DATA_JSON) {
-                        const json = this.parseJsonBlock(block);
-                        return json as Plot[];
-                    }
-                }
-                return[];
-            }
 
-                private getBlock(block: BlockInfo) : DataView{
-                // first validate the block with what we expect.
-
-                // TAKE NOTE OF ENDIANNESS.
-                // Data transferred via HTTP is generally big endian.
-                // Local file should have been written as little endian.
-                // All use of DataViews requires explicit endianness but default to big endian.
-                // TypedArrays use the underlying system endianness (usually little).
-                const blockType = this.dataView.getUint32(block.offset, true);
-                const blockSize = this.dataView.getUint32(block.offset + 4, true);
-
-                if (blockType != = block.type) {
-                    throw new Error(
-                        "Block type mismatch.  Header says " +
-                            block.type +
-                            " but block says " +
-                            blockType
-                    );
-                }
-                if (blockSize != = block.size) {
-                    throw new Error(
-                        "Block size mismatch.  Header says " +
-                            block.size +
-                            " but block says " +
-                            blockSize
-                    );
-                }
-                // note: NOT a copy.
-                // never produce copies internally. let callers make a copy if they need it.
-                // also note: return the contents of the block INCLUDING the block header
-                return new DataView(this.fileContents, block.offset, block.size);
-            }
-
-                private getBlockContent(block: BlockInfo) : DataView{
-                // return the block portion after the block header
-                // first validate the block with what we expect.
-
-                // TAKE NOTE OF ENDIANNESS.
-                // Data transferred via HTTP is generally big endian.
-                // Local file should have been written as little endian.
-                // All use of DataViews requires explicit endianness but default to big endian.
-                // TypedArrays use the underlying system endianness (usually little).
-                const blockType = this.dataView.getUint32(block.offset, true);
-                const blockSize = this.dataView.getUint32(block.offset + 4, true);
-
-                if (blockType != = block.type) {
-                    throw new Error(
-                        "Block type mismatch.  Header says " +
-                            block.type +
-                            " but block says " +
-                            blockType
-                    );
-                }
-                if (blockSize != = block.size) {
-                    throw new Error(
-                        "Block size mismatch.  Header says " +
-                            block.size +
-                            " but block says " +
-                            blockSize
-                    );
-                }
-                // note: NOT a copy.
-                // never produce copies internally. let callers make a copy if they need it.
-                // also note: return the contents of the block NOT including the block header
-                return new DataView(
-                    this.fileContents,
-                    block.offset + BLOCK_HEADER_SIZE,
-                    block.size - BLOCK_HEADER_SIZE
-                );
-            }
-
-                /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-                private parseJsonBlock(block: BlockInfo) : any{
-                    const blockData = this.getBlockContent(block);
-                    const enc = new TextDecoder("utf-8");
-                    const text = enc.decode(blockData);
-                    // trim any trailing null bytes
-                    const trimmed = text.replace(/ \0 + $ / , "");
-                    const json = JSON.parse(trimmed);
-                    return json;
-            }
 
                 getTrajectoryFileInfo() : TrajectoryFileInfo{
                     return this.tfi;
