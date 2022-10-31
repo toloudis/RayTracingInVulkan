@@ -14,6 +14,10 @@ set(src_files_assets
 	Assets/readcif.h
 	Assets/Scene.cpp
 	Assets/Scene.hpp
+	Assets/Simularium.cpp
+	Assets/Simularium.hpp
+	Assets/SimulariumBinary.cpp
+	Assets/SimulariumBinary.hpp
 	Assets/SimulariumJson.cpp
 	Assets/SimulariumJson.hpp
 	Assets/Sphere.hpp

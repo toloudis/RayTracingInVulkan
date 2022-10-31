@@ -61,7 +61,7 @@ namespace simularium {
         double timeStepSize = 100;
         float spatialUnitFactorMeters = 1e-9f;
         std::unordered_map<std::size_t, std::string> typeMapping;
-        float boxX=0, boxY=0, boxZ=0;
+        float boxX, boxY, boxZ;
         CameraPosition cameraDefault;
 
         std::string Str()
@@ -82,26 +82,6 @@ namespace simularium {
             virtual void getFrame(size_t theFrameNumber, TrajectoryFrame* frame) = 0;
         };
 
-		
-        class SimulariumFileReaderJson : public ISimulariumFile {
-        public:
-            SimulariumFileReaderJson(std::string filePath);
-
-            bool DeserializeFrame(
-                nlohmann::json& jsonRoot,
-                std::size_t frameNumber,
-                TrajectoryFrame& outFrame);
-
-
-            virtual TrajectoryFileProperties getTrajectoryFileInfo();
-            // virtual std::vector<Plot> getPlotData() = 0;
-            virtual size_t getNumFrames();
-            //virtual size_t getFrameIndexAtTime(float time);
-            virtual void getFrame(size_t theFrameNumber, TrajectoryFrame* frame);
-        private:
-            nlohmann::json mJsonRoot;
-
-        };
 
         class SimulariumFileReaderBinary : public ISimulariumFile {
         public:
