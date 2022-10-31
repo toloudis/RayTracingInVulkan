@@ -18,6 +18,7 @@ namespace simularium {
         AgentDataFrame data;
         float time;
         std::size_t frameNumber;
+        TrajectoryFrame() :time(0), frameNumber(0) {}
     };
 
     struct AgentData {
@@ -146,6 +147,8 @@ namespace simularium {
         nlohmann::json parseJsonBlock(const BlockInfo& block);
         uint8_t* getBlockContent(const BlockInfo& block);
         uint8_t* getBlock(const BlockInfo& block);
+        uint8_t* readSpatialDataInfo();
+        AgentDataFrame parseAgentData(uint8_t* ptr, size_t size);
 
         };
 
