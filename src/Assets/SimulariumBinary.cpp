@@ -46,7 +46,8 @@ namespace simularium {
                 // fill in TrajectoryFrame from this data:
                 frame->time = ((float*)(frameData))[1];
 				frame->frameNumber =(size_t) ((float*)(frameData))[0];
-				frame->data = this->parseAgentData(frameData + 8, frameSize - 8);
+                uint32_t numAgents = ((uint32_t*)(frameData))[2];
+				frame->data = this->parseAgentData(frameData + 12, numAgents);
         }
 		
         AgentDataFrame SimulariumFileReaderBinary::parseAgentData(uint8_t* ptr, size_t size) {
@@ -151,7 +152,7 @@ namespace simularium {
 				is.read((char*)&bi.offset, 4);
 				is.read((char*)&bi.type, 4);
 				is.read((char*)&bi.size, 4);
-                blocks.push_back(bi);
+                blocks[i]=(bi);
             }
             if (blocks[0].offset != headerLength) {
                 throw ("First block offset does not match header length");
@@ -174,12 +175,12 @@ namespace simularium {
             // All use of DataViews requires explicit endianness but default to big endian.
             // TypedArrays use the underlying system endianness (usually little).
             is.seekg(block.offset, is.beg);
-            const uint32_t blockType = 0;
+            uint32_t blockType = 0;
             is.read((char*)&blockType, 4);
-            const uint32_t blockSize = 0;
+            uint32_t blockSize = 0;
 			is.read((char*)&blockSize, 4);
 
-            if (blockType != block.type) {
+            if (blockType != (uint32_t)block.type) {
                 std::ostringstream oss;
                 oss << "Block type mismatch.  Header says " <<
                     block.type <<
@@ -219,12 +220,12 @@ namespace simularium {
             // All use of DataViews requires explicit endianness but default to big endian.
             // TypedArrays use the underlying system endianness (usually little).
             is.seekg(block.offset, is.beg);
-            const uint32_t blockType = 0;
+            uint32_t blockType = 0;
             is.read((char*)&blockType, 4);
-            const uint32_t blockSize = 0;
+            uint32_t blockSize = 0;
             is.read((char*)&blockSize, 4);
 
-            if (blockType != block.type) {
+            if (blockType != (uint32_t)block.type) {
                 std::ostringstream oss;
                 oss << "Block type mismatch.  Header says " <<
                     block.type <<
