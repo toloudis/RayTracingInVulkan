@@ -1,4 +1,4 @@
-#include "SimulariumJson.hpp"
+#include "SimulariumBinary.hpp"
 
 #include <algorithm>
 #include <fstream>

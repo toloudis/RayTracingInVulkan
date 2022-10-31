@@ -2,6 +2,7 @@
 #include "Assets/LoadCifModel.hpp"
 #include "Assets/Material.hpp"
 #include "Assets/Model.hpp"
+#include "Assets/SimulariumBinary.hpp"
 #include "Assets/SimulariumJson.hpp"
 #include "Assets/Sphere.hpp"
 #include "Assets/Texture.hpp"
@@ -325,16 +326,19 @@ SceneAssets SceneList::CornellBoxLucy(CameraInitialSate& camera)
 
 SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	// read a JSON file
+	std::string fp2("C:\\Users\\dmt\\Downloads\\readdy-new-self-ass.simularium");
 	std::string filePath("C:\\Users\\danielt\\Downloads\\actin.h5.simularium");
 	std::ifstream inputstream(filePath);
-	nlohmann::json j;
-	inputstream >> j;
-	aics::simularium::fileio::SimulariumFileReaderJson reader(filePath);
+	//nlohmann::json j;
+	//inputstream >> j;
+	//aics::simularium::fileio::SimulariumFileReaderJson reader(filePath);
+	aics::simularium::fileio::SimulariumFileReaderBinary reader(fp2);
 	aics::simularium::TrajectoryFrame trajectoryFrame;
-	bool ok = reader.DeserializeFrame(
-			j,
-			0,
-		trajectoryFrame);
+	reader.getFrame(0, &trajectoryFrame);
+//	bool ok = reader.DeserializeFrame(
+//			j,
+//			0,
+//		trajectoryFrame);
 
 	camera.ModelView = lookAt(vec3(0,0,150), vec3(0,0, 0), vec3(0, 1, 0));
 	camera.FieldOfView = 40;
