@@ -2,6 +2,7 @@
 #include "BottomLevelAccelerationStructure.hpp"
 #include "DeviceProcedures.hpp"
 #include "RayTracingPipeline.hpp"
+#include "RayTracingPipelineSinglePass.hpp"
 #include "ShaderBindingTable.hpp"
 #include "TopLevelAccelerationStructure.hpp"
 #include "Assets/Model.hpp"
@@ -142,15 +143,26 @@ void Application::CreateSwapChain()
 	Vulkan::Application::CreateSwapChain();
 
 	CreateOutputImage();
+	
+	CreateRayTracingPipelineAndSbt();
+}
+
+void Application::CreateRayTracingPipelineAndSbt() {
 	// enforce deletion first
 	rayTracingPipeline_.reset();
-	rayTracingPipeline_.reset(new RayTracingPipeline(*deviceProcedures_, SwapChain(), topAs_[0], *accumulationImageView_, *outputImageView_, UniformBuffers(), GetScene()));
+	rayTracingPipeline_.reset(
+		//isPathTrace ?
+		new RayTracingPipeline(*deviceProcedures_, SwapChain(), topAs_[0], *accumulationImageView_, *outputImageView_, UniformBuffers(), GetScene())
+		//:
+		//new RayTracingPipelineSinglePass(*deviceProcedures_, SwapChain(), topAs_[0], *accumulationImageView_, *outputImageView_, UniformBuffers(), GetScene())
+	);
 
 	const std::vector<ShaderBindingTable::Entry> rayGenPrograms = { {rayTracingPipeline_->RayGenShaderIndex(), {}} };
 	const std::vector<ShaderBindingTable::Entry> missPrograms = { {rayTracingPipeline_->MissShaderIndex(), {}} };
 	const std::vector<ShaderBindingTable::Entry> hitGroups = { {rayTracingPipeline_->TriangleHitGroupIndex(), {}}, {rayTracingPipeline_->ProceduralHitGroupIndex(), {}} };
 
 	shaderBindingTable_.reset(new ShaderBindingTable(*deviceProcedures_, *rayTracingPipeline_, *rayTracingProperties_, rayGenPrograms, missPrograms, hitGroups));
+
 }
 
 void Application::DeleteSwapChain()

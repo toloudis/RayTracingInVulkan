@@ -326,7 +326,7 @@ SceneAssets SceneList::CornellBoxLucy(CameraInitialSate& camera)
 
 SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	// read a JSON file
-	std::string fp2("C:\\Users\\dmt\\Downloads\\readdy-new-self-ass.simularium");
+	std::string fp2("E:\\data\\readdy-new-self-ass.simularium");
 	std::string filePath("C:\\Users\\danielt\\Downloads\\actin.h5.simularium");
 	//std::ifstream inputstream(filePath);
 	//nlohmann::json j;

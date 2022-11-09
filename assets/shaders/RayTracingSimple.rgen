@@ -108,7 +108,7 @@ void main()
 	// Accumulate all the rays for this pixels.
 	for (uint s = 0; s < Camera.NumberOfSamples; ++s)
 	{
-		vec2 pixsample = OwenScrambledSobol(s);
+		vec2 pixsample = vec2(0.0, 0.0); // OwenScrambledSobol(s);
 		const vec2 pixel = vec2(gl_LaunchIDEXT.x + pixsample.x, gl_LaunchIDEXT.y + pixsample.y);
 		const vec2 uv = (pixel / gl_LaunchSizeEXT.xy) * 2.0 - 1.0;
 
@@ -159,7 +159,7 @@ void main()
 	}
 
 	const vec3 accumulatedColor = pixelColor;
-	pixelColor = accumulatedColor / Camera.NumberOfSamples;
+	pixelColor = accumulatedColor;// / Camera.NumberOfSamples;
 
 	// Apply raytracing-in-one-weekend gamma correction.
 	pixelColor = sqrt(pixelColor);

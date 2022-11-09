@@ -99,7 +99,7 @@ namespace
 
 		userSettings.SceneIndex = options.SceneIndex;
 
-		userSettings.Renderer = RendererType::ProgressivePathTracer;
+		userSettings.Renderer = RendererType::SinglePassRayTracer;// ProgressivePathTracer;
 		userSettings.AccumulateRays = true;
 		userSettings.NumberOfSamples = options.Samples;
 		userSettings.NumberOfBounces = options.Bounces;

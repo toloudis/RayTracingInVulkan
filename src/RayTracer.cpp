@@ -148,6 +148,7 @@ void RayTracer::DrawFrame()
 	numberOfSamples_ = glm::clamp(userSettings_.MaxNumberOfSamples - totalNumberOfSamples_, 0u, userSettings_.NumberOfSamples);
 	totalNumberOfSamples_ += numberOfSamples_;
 
+	// base class implementation will call Render
 	Application::DrawFrame();
 }
 
@@ -165,9 +166,15 @@ void RayTracer::Render(VkCommandBuffer commandBuffer, const uint32_t imageIndex)
 	CheckAndUpdateBenchmarkState(prevTime);
 
 	// Render the scene
-	(userSettings_.Renderer == RendererType::ProgressivePathTracer || userSettings_.Renderer == RendererType::SinglePassRayTracer)
-		? Vulkan::RayTracing::Application::Render(commandBuffer, imageIndex)
-		: Vulkan::Application::Render(commandBuffer, imageIndex);
+	if (userSettings_.Renderer == RendererType::ProgressivePathTracer) {
+		Vulkan::RayTracing::Application::Render(commandBuffer, imageIndex);
+	}
+	else if (userSettings_.Renderer == RendererType::SinglePassRayTracer) {
+		Vulkan::RayTracing::Application::Render(commandBuffer, imageIndex);
+	}
+	else {
+		Vulkan::Application::Render(commandBuffer, imageIndex);
+	}
 
 	// Render the UI
 	Statistics stats = {};
