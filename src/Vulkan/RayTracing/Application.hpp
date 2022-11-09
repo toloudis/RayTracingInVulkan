@@ -37,12 +37,18 @@ namespace Vulkan::RayTracing
 		void DeleteSwapChain() override;
 		void Render(VkCommandBuffer commandBuffer, uint32_t imageIndex) override;
 
+		virtual void CreateRayTracingPipeline() = 0;
+		
+		// only to be used inside the derived-class override of CreateRayTracingPipeline
+		void CreateRayTracingPipelineProgressive();
+		void CreateRayTracingPipelineSinglePass();
 	private:
 
 		void CreateBottomLevelStructures(VkCommandBuffer commandBuffer);
 		void CreateTopLevelStructures(VkCommandBuffer commandBuffer);
 		void CreateOutputImage();
 		void CreateRayTracingPipelineAndSbt();
+
 
 		std::unique_ptr<class DeviceProcedures> deviceProcedures_;
 		std::unique_ptr<class RayTracingProperties> rayTracingProperties_;

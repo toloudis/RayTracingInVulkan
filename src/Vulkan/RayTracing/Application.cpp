@@ -147,15 +147,24 @@ void Application::CreateSwapChain()
 	CreateRayTracingPipelineAndSbt();
 }
 
-void Application::CreateRayTracingPipelineAndSbt() {
+void Application::CreateRayTracingPipelineSinglePass() {
 	// enforce deletion first
 	rayTracingPipeline_.reset();
 	rayTracingPipeline_.reset(
-		//isPathTrace ?
-		new RayTracingPipeline(*deviceProcedures_, SwapChain(), topAs_[0], *accumulationImageView_, *outputImageView_, UniformBuffers(), GetScene())
-		//:
-		//new RayTracingPipelineSinglePass(*deviceProcedures_, SwapChain(), topAs_[0], *accumulationImageView_, *outputImageView_, UniformBuffers(), GetScene())
+		new RayTracingPipelineSinglePass(*deviceProcedures_, SwapChain(), topAs_[0], *accumulationImageView_, *outputImageView_, UniformBuffers(), GetScene())
 	);
+}
+
+void Application::CreateRayTracingPipelineProgressive() {
+	// enforce deletion first
+	rayTracingPipeline_.reset();
+	rayTracingPipeline_.reset(
+		new RayTracingPipeline(*deviceProcedures_, SwapChain(), topAs_[0], *accumulationImageView_, *outputImageView_, UniformBuffers(), GetScene())
+	);
+}
+
+void Application::CreateRayTracingPipelineAndSbt() {
+	CreateRayTracingPipeline();
 
 	const std::vector<ShaderBindingTable::Entry> rayGenPrograms = { {rayTracingPipeline_->RayGenShaderIndex(), {}} };
 	const std::vector<ShaderBindingTable::Entry> missPrograms = { {rayTracingPipeline_->MissShaderIndex(), {}} };

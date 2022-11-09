@@ -102,6 +102,15 @@ void RayTracer::CreateSwapChain()
 	CheckFramebufferSize();
 }
 
+void RayTracer::CreateRayTracingPipeline() {
+	if (userSettings_.Renderer == RendererType::ProgressivePathTracer) {
+		Application::CreateRayTracingPipelineProgressive();
+	}
+	else {
+		Application::CreateRayTracingPipelineSinglePass();
+	}
+}
+
 void RayTracer::DeleteSwapChain()
 {
 	userInterface_.reset();
