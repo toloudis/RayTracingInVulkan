@@ -2,6 +2,8 @@
 set(exe_name ${MAIN_PROJECT})
 
 set(src_files_assets
+	Assets/AssetDownloader.cpp
+	Assets/AssetDownloader.hpp
 	Assets/CornellBox.cpp
 	Assets/CornellBox.hpp
 	Assets/LoadCifModel.cpp

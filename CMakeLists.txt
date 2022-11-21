@@ -27,16 +27,16 @@ if (MSVC)
 			string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
 		endif()
 	endforeach()
-	
+
 	add_compile_options("/MP")
 endif()
 
 if (UNIX)
-	
+
 	add_definitions(-DUNIX)
 	add_compile_options("-Wall")
 	add_compile_options("-fvisibility=hidden")
-	
+
 	find_package(Backtrace REQUIRED)
 
 	string(COMPARE EQUAL ${Backtrace_HEADER} "backtrace.h" BacktraceRequired)
@@ -47,7 +47,7 @@ if (UNIX)
 
 endif ()
 
-find_package(Boost REQUIRED COMPONENTS exception program_options) 
+find_package(Boost REQUIRED COMPONENTS exception program_options)
 find_package(CURL CONFIG REQUIRED)
 find_package(freetype CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
@@ -57,6 +57,7 @@ find_package(tinyobjloader CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_path(STB_INCLUDE_DIRS "stb.h")
 
+
 add_definitions(-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS)
 
 IF (NOT Vulkan_FOUND)
@@ -65,11 +66,11 @@ ELSE()
     message(STATUS ${Vulkan_LIBRARY})
 ENDIF()
 
-find_program(Vulkan_GLSLANG_VALIDATOR 
-	NAMES glslangValidator 
-	HINTS ENV VULKAN_SDK 
+find_program(Vulkan_GLSLANG_VALIDATOR
+	NAMES glslangValidator
+	HINTS ENV VULKAN_SDK
 	PATH_SUFFIXES bin)
-	
+
 if (NOT Vulkan_GLSLANG_VALIDATOR)
     message(FATAL_ERROR "glslangValidator not found!")
 endif()

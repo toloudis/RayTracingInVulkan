@@ -1,4 +1,5 @@
 
+#include "Assets/AssetDownloader.hpp"
 #include "Vulkan/Enumerate.hpp"
 #include "Vulkan/Strings.hpp"
 #include "Vulkan/SwapChain.hpp"
@@ -27,6 +28,10 @@ int main(int argc, const char* argv[]) noexcept
 {
 	try
 	{
+
+AssetDownloader dl;
+
+
 		const Options options(argc, argv);
 		const UserSettings userSettings = CreateUserSettings(options);
 		const Vulkan::WindowConfig windowConfig
