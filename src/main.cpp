@@ -29,7 +29,8 @@ int main(int argc, const char* argv[]) noexcept
 	try
 	{
 
-AssetDownloader dl;
+AssetCache cache;
+std::shared_ptr<AssetEntry> testasset = cache.get("https://files.rcsb.org/download/7TPT.cif");
 
 
 		const Options options(argc, argv);

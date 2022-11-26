@@ -8,9 +8,29 @@ namespace
 {
     size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
     {
-        ((std::string*)userp)->append((char*)contents, size * nmemb);
+		FILE* f = (FILE*)userp;
+		fwrite(contents, size, nmemb, f);
         return size * nmemb;
     }
+
+
+    int progress_callback(
+        void *clientp,
+        curl_off_t dltotal,
+        curl_off_t dlnow,
+        curl_off_t ultotal,
+        curl_off_t ulnow) {
+
+        CURL* curl_handle = (CURL*)clientp;
+
+        curl_off_t dlt = 0;
+        curl_easy_getinfo(curl_handle, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &dlt);
+
+        // TOOD check for abort?
+        printf("Downloaded %lld of %lld bytes\r\n", dlnow, dlt);
+        return CURL_PROGRESSFUNC_CONTINUE;
+    }
+
 }
 
 AssetDownloader::AssetDownloader()
@@ -22,37 +42,50 @@ AssetDownloader::~AssetDownloader()
     curl_global_cleanup();
 }
 
-void AssetDownloader::download(const std::string& url, const std::string& path, const std::function<void(bool)>& callback)
+// TODO make a thread function that can be interrupted midway through the download
+// and can signal when it's done
+bool AssetDownloader::download(const std::string& url, const std::string& path, curl_xferinfo_callback progressCallback)
 {
  /* init the curl session */
   CURL* curl_handle = curl_easy_init();
+  if (curl_handle) {
+      /* set URL to get here */
+      curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
 
-  /* set URL to get here */
-  curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
+      /* Switch on full protocol/debug output while testing */
+      //curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
 
-  /* Switch on full protocol/debug output while testing */
-  curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
 
-  /* disable progress meter, set to 0L to enable it */
-  curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
+      /* open the file */
+      FILE* pagefile = fopen(path.c_str(), "wb");
+      if (pagefile) {
+        /* disable progress meter, set to 0L to enable it, 1L to disable */
+        curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 0L);
+        curl_easy_setopt(curl_handle, CURLOPT_XFERINFODATA, curl_handle);
+        curl_easy_setopt(curl_handle, CURLOPT_XFERINFOFUNCTION,
+                            progressCallback);
 
-  /* send all data to this function  */
-  curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteCallback);
+        /* send all data to this function  */
+        curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteCallback);
 
-  /* open the file */
-  FILE* pagefile = fopen(path.c_str(), "wb");
-  if(pagefile) {
+          /* write the page body to this file handle */
+          curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, pagefile);
 
-    /* write the page body to this file handle */
-    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, pagefile);
+          /* get it! */
+          curl_easy_perform(curl_handle);
 
-    /* get it! */
-    curl_easy_perform(curl_handle);
+          /* close the header file */
+          fclose(pagefile);
+      }
 
-    /* close the header file */
-    fclose(pagefile);
+      /* cleanup curl stuff */
+      curl_easy_cleanup(curl_handle);
+
+      return true;
+
   }
-
-  /* cleanup curl stuff */
-  curl_easy_cleanup(curl_handle);
+  else {
+	  std::cout << "Curl init failed" << std::endl;
+  }
+  return false;
  }

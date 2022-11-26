@@ -2,6 +2,8 @@
 set(exe_name ${MAIN_PROJECT})
 
 set(src_files_assets
+	Assets/dispatch_queue.cpp
+	Assets/dispatch_queue.hpp
 	Assets/AssetDownloader.cpp
 	Assets/AssetDownloader.hpp
 	Assets/CornellBox.cpp
