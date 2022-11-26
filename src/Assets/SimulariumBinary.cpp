@@ -13,8 +13,8 @@ namespace simularium {
             mFilePath = filePath;
 
             nFrames = 0;
-            //frameOffsets = [];
-            //frameLengths = [];
+            frameOffsets = {};
+            frameLengths = {};
             header = readHeader();
             //tfi = readTrajectoryFileInfo();
             //plotData = readPlotData();
@@ -38,6 +38,10 @@ namespace simularium {
         size_t SimulariumFileReaderBinary::getNumFrames() { return 0; }
         //virtual size_t getFrameIndexAtTime(float time);
         void SimulariumFileReaderBinary::getFrame(size_t theFrameNumber, TrajectoryFrame* frame) {
+            if (this->frameOffsets.empty()) {
+                // TODO error or failed to load trajectory
+                return;
+            }
                 auto frameOffset = this->frameOffsets[theFrameNumber];
                 auto frameSize = this->frameLengths[theFrameNumber];
 				
@@ -97,6 +101,10 @@ namespace simularium {
         uint8_t* SimulariumFileReaderBinary::readSpatialDataInfo() {
             std::fstream f1;
             f1.open(mFilePath, std::ios::in | std::ios::binary);
+            if (!f1.is_open()) {
+                return nullptr;
+            }
+
             // find spatial data block and load frame offsets
             for (auto block : this->header.blocks) {
                 if (block.type == BlockTypeEnum::SPATIAL_DATA_BINARY) {
@@ -129,6 +137,9 @@ namespace simularium {
 		
         SimulariumFileReaderBinary::Header SimulariumFileReaderBinary::readHeader() {
             std::fstream is(mFilePath, std::ios::in | std::ios::binary);
+            if (!is.is_open()) {
+                return { 0, {} };
+            }
             // get length of file:
             is.seekg(0, is.end);
             size_t length = is.tellg();

@@ -18,7 +18,7 @@ namespace simularium {
         AgentDataFrame data;
         float time;
         std::size_t frameNumber;
-        TrajectoryFrame() :time(0), frameNumber(0) {}
+        TrajectoryFrame() :time(0), frameNumber(0), data({}) {}
     };
 
     struct AgentData {

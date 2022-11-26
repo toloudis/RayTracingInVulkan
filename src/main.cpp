@@ -65,7 +65,20 @@ std::shared_ptr<AssetEntry> testasset = cache.get("https://files.rcsb.org/downlo
 	{
 		return EXIT_SUCCESS;
 	}
+	catch (const std::runtime_error& exception)
+	{
+		Utilities::Console::Write(Utilities::Severity::Fatal, [&exception]()
+			{
+				const auto stacktrace = boost::get_error_info<traced>(exception);
 
+		std::cerr << "FATAL: " << exception.what() << std::endl;
+
+		if (stacktrace)
+		{
+			std::cerr << '\n' << *stacktrace << '\n';
+		}
+			});
+	}
 	catch (const std::exception& exception)
 	{
 		Utilities::Console::Write(Utilities::Severity::Fatal, [&exception]()
@@ -85,7 +98,7 @@ std::shared_ptr<AssetEntry> testasset = cache.get("https://files.rcsb.org/downlo
 	{
 		Utilities::Console::Write(Utilities::Severity::Fatal, []()
 		{
-			std::cerr << "FATAL: caught unhandled exception" << std::endl;
+		std::cerr << "FATAL: caught unhandled exception" << std::endl;
 		});
 	}
 
