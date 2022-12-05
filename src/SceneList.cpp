@@ -324,15 +324,21 @@ SceneAssets SceneList::CornellBoxLucy(CameraInitialSate& camera)
 	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }
 
+static aics::simularium::fileio::ISimulariumFile* GetReader(std::string path) {
+	bool isBinary = aics::simularium::fileio::SimulariumFileReaderBinary::isBinarySimulariumFile(path);
+	if (isBinary)
+		return new aics::simularium::fileio::SimulariumFileReaderBinary(path);
+	else
+		return new aics::simularium::fileio::SimulariumFileReaderJson(path);
+}
+
 SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	// read a JSON file
 	std::string fp2("E:\\data\\readdy-new-self-ass.simularium");
 	std::string filePath("C:\\Users\\danielt\\Downloads\\actin.h5.simularium");
 
 	bool isBinary = aics::simularium::fileio::SimulariumFileReaderBinary::isBinarySimulariumFile(fp2);
-	aics::simularium::fileio::ISimulariumFile* reader = isBinary ? 
-		(new aics::simularium::fileio::SimulariumFileReaderBinary(fp2)) : 
-		(new aics::simularium::fileio::SimulariumFileReaderJson(fp2));
+	aics::simularium::fileio::ISimulariumFile* reader = GetReader(fp2);
 	
 	//std::ifstream inputstream(filePath);
 	//nlohmann::json j;
