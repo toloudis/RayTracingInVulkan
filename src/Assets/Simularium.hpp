@@ -74,6 +74,7 @@ namespace simularium {
     namespace fileio {
 
         class ISimulariumFile {
+        public:
             virtual TrajectoryFileProperties getTrajectoryFileInfo() = 0;
             // virtual std::vector<Plot> getPlotData() = 0;
             virtual size_t getNumFrames() = 0;

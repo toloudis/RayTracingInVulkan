@@ -3,6 +3,7 @@
 #include <curl/curl.h>
 
 #include <string>
+#include <filesystem>
 #include <functional>
 #include <mutex>
 #include <condition_variable>
@@ -28,6 +29,7 @@ struct AssetEntry {
 };
 
 class AssetCache {
+    std::filesystem::path mLocalCacheDir;
     AssetDownloader mDownloader;
     std::unordered_map<std::string, std::shared_ptr<AssetEntry>> mCache;
     std::mutex mMutex;
@@ -35,9 +37,12 @@ class AssetCache {
     std::function<void(std::shared_ptr<AssetEntry>)> mOnAssetReady;
     public:
 
-    AssetCache() = default;
+    AssetCache(std::string localCacheDir = ".") {
+        mLocalCacheDir = std::filesystem::absolute(localCacheDir);
+        std::filesystem::create_directories(mLocalCacheDir);
+    }
     ~AssetCache() {
-                std::lock_guard<std::mutex> lock(mMutex);
+        std::lock_guard<std::mutex> lock(mMutex);
 
         // TODO: signal to cancel all threads currently downloading
         // and drop all shared_ptrs to AssetEntry
@@ -45,7 +50,12 @@ class AssetCache {
         for (auto& entry : mCache) {
             auto asset = entry.second;
             if (asset->state == AssetEntry::DOWNLOADING) {
-
+                if (asset->downloadThread && asset->downloadThread->joinable()) {
+					// TODO CANT JOIN BECAUSE THIS WILL TRY TO LOCK MUTEX AGAIN
+                    // asset->downloadThread->join();
+                    delete asset->downloadThread;
+					asset->downloadThread = nullptr;
+                }
             }
             entry.second.reset();
         }
@@ -59,7 +69,7 @@ class AssetCache {
         auto e = std::make_shared<AssetEntry>();
         e->name = s;
         e->url = s;
-        e->localPath = "test";
+        e->localPath = (mLocalCacheDir / "test").string();
         e->state = AssetEntry::DOWNLOADING;
         mCache[s] = e;
         e->downloadThread = new std::thread([this](AssetDownloader& d, std::shared_ptr<AssetEntry> e) {
@@ -80,6 +90,7 @@ class AssetCache {
 
                 if (success) {
                     e->state = AssetEntry::DOWNLOADED;
+					// TODO delete/discard downloadThread somehow???
                 }
                 else {
                     e->state = AssetEntry::NOT_DOWNLOADED;
@@ -87,7 +98,7 @@ class AssetCache {
             }
             // broadcast this asset to rest of app
             if (mOnAssetReady) {
-                mOnAssetReady(e); 
+                mOnAssetReady(e);
             }
         }, std::ref(mDownloader), e);
         return e;

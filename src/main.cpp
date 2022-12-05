@@ -29,7 +29,7 @@ int main(int argc, const char* argv[]) noexcept
 	try
 	{
 
-AssetCache cache;
+AssetCache cache("./pdbcache/");
 std::shared_ptr<AssetEntry> testasset = cache.get("https://files.rcsb.org/download/7TPT.cif");
 
 

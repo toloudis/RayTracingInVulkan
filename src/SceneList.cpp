@@ -328,13 +328,19 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	// read a JSON file
 	std::string fp2("E:\\data\\readdy-new-self-ass.simularium");
 	std::string filePath("C:\\Users\\danielt\\Downloads\\actin.h5.simularium");
+
+	bool isBinary = aics::simularium::fileio::SimulariumFileReaderBinary::isBinarySimulariumFile(fp2);
+	aics::simularium::fileio::ISimulariumFile* reader = isBinary ? 
+		(new aics::simularium::fileio::SimulariumFileReaderBinary(fp2)) : 
+		(new aics::simularium::fileio::SimulariumFileReaderJson(fp2));
+	
 	//std::ifstream inputstream(filePath);
 	//nlohmann::json j;
 	//inputstream >> j;
 	//aics::simularium::fileio::SimulariumFileReaderJson reader(filePath);
-	aics::simularium::fileio::SimulariumFileReaderBinary reader(fp2);
+	//aics::simularium::fileio::SimulariumFileReaderBinary reader(fp2);
 	aics::simularium::TrajectoryFrame trajectoryFrame;
-	reader.getFrame(0, &trajectoryFrame);
+	reader->getFrame(0, &trajectoryFrame);
 //	bool ok = reader.DeserializeFrame(
 //			j,
 //			0,
