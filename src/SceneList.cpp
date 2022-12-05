@@ -13,6 +13,8 @@
 #include <memory>
 #include <random>
 
+#include <glm/gtx/euler_angles.hpp>
+
 using namespace glm;
 using Assets::Material;
 using Assets::Model;
@@ -324,6 +326,38 @@ SceneAssets SceneList::CornellBoxLucy(CameraInitialSate& camera)
 	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }
 
+static std::vector<std::string> SplitWithCharacters(const std::string& str, int splitLength) {
+	size_t numSubstrings = str.length() / splitLength;
+	std::vector<std::string> ret;
+
+	for (int i = 0; i < numSubstrings; i++) {
+		ret.push_back(str.substr(i * splitLength, splitLength));
+	}
+
+	// If there are leftover characters, create a shorter item at the end.
+	if (str.length() % splitLength != 0) {
+		ret.push_back(str.substr(splitLength * numSubstrings));
+	}
+
+	return ret;
+}
+
+static void hex2rgb(std::string hex, std::array<float, 3>& out) {
+	if (hex.at(0) == '#') {
+		hex.erase(0, 1);
+	}
+
+	while (hex.length() < 6) {
+		hex += "0";
+	}
+
+	std::vector<std::string> colori = SplitWithCharacters(hex, 2);
+
+	out[0] = stoi(colori[0], nullptr, 16)/255.0f;
+	out[1] = stoi(colori[1], nullptr, 16)/255.0f;
+	out[2] = stoi(colori[2], nullptr, 16)/255.0f;
+}
+
 static aics::simularium::fileio::ISimulariumFile* GetReader(std::string path) {
 	bool isBinary = aics::simularium::fileio::SimulariumFileReaderBinary::isBinarySimulariumFile(path);
 	if (isBinary)
@@ -335,49 +369,79 @@ static aics::simularium::fileio::ISimulariumFile* GetReader(std::string path) {
 SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	// read a JSON file
 	std::string fp2("E:\\data\\readdy-new-self-ass.simularium");
-	std::string filePath("C:\\Users\\danielt\\Downloads\\actin.h5.simularium");
+	std::string fp2_("C:\\Users\\danielt\\Downloads\\actin.h5.simularium");
 
-	bool isBinary = aics::simularium::fileio::SimulariumFileReaderBinary::isBinarySimulariumFile(fp2);
 	aics::simularium::fileio::ISimulariumFile* reader = GetReader(fp2);
 	
-	//std::ifstream inputstream(filePath);
-	//nlohmann::json j;
-	//inputstream >> j;
-	//aics::simularium::fileio::SimulariumFileReaderJson reader(filePath);
-	//aics::simularium::fileio::SimulariumFileReaderBinary reader(fp2);
+	aics::simularium::TrajectoryFileProperties tfp = reader->getTrajectoryFileInfo();
+
+	camera.ModelView = lookAt(vec3(tfp.cameraDefault.position[0], tfp.cameraDefault.position[1], tfp.cameraDefault.position[2]),
+		vec3(tfp.cameraDefault.lookAtPosition[0], tfp.cameraDefault.lookAtPosition[1], tfp.cameraDefault.lookAtPosition[2]),
+		vec3(tfp.cameraDefault.upVector[0], tfp.cameraDefault.upVector[1], tfp.cameraDefault.upVector[2]));
+	camera.FieldOfView = tfp.cameraDefault.fovDegrees;
+	camera.Aperture = 0.0f;
+	camera.FocusDistance = 10.0f;
+	camera.ControlSpeed = 5.0f;
+	camera.GammaCorrection = true;
+	camera.HasSky = false;
+
+
+	// get all the scene's geometries
+	std::unordered_map<std::size_t, std::unique_ptr<Model>> modelLookup;
+	for (auto agentType : tfp.typeMapping) {
+		aics::simularium::AgentType at = agentType.second;
+		Assets::Model* m = nullptr;
+		if (at.geometry.displayType == "SPHERE") {
+			// parse color
+			std::string color = at.geometry.color;
+			std::array<float, 3> rgb;
+			hex2rgb(color, rgb);
+			m = Model::CreateSphere(vec3(0,0,0), 1.0, Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])), true, std::to_string(agentType.first));
+		}
+		modelLookup[agentType.first] = std::unique_ptr<Model>(m);
+	}
+	
 	aics::simularium::TrajectoryFrame trajectoryFrame;
-	reader->getFrame(0, &trajectoryFrame);
+	reader->getFrame(tfp.totalSteps / 2 /*0*/, &trajectoryFrame);
 //	bool ok = reader.DeserializeFrame(
 //			j,
 //			0,
 //		trajectoryFrame);
 
-	camera.ModelView = lookAt(vec3(0,0,150), vec3(0,0, 0), vec3(0, 1, 0));
-	camera.FieldOfView = 40;
-	camera.Aperture = 0.0f;
-	camera.FocusDistance = 10.0f;
-	camera.ControlSpeed = 500.0f;
-	camera.GammaCorrection = true;
-	camera.HasSky = false;
 
 	const auto i = mat4(1);
 
-	std::vector<std::unique_ptr<Model>> models;
+	std::vector<ModelInstance> modelInstances;
 	for (auto agent: trajectoryFrame.data) {
-		// TODO:  allow a procedural model to have a transform?
-		auto sphere = Model::CreateSphere(vec3(agent.x, agent.y, agent.z), agent.collision_radius, Material::Lambertian(vec3(1.0f,1.0f, 1.0f)), true);
-//		sphere.Transform(translate(i, vec3(agent.x, agent.y, agent.z)));
-		models.push_back(std::unique_ptr<Model>(sphere));
+		auto& m = modelLookup[(std::size_t)agent.type];
+
+		auto identity = glm::mat4(1.0f); // construct identity matrix
+		// scale geom by radius!
+		auto scale = identity;// glm::scale(identity, glm::vec3(agent.collision_radius, agent.collision_radius, agent.collision_radius));
+		// apply the matrix transformation to rotate
+		auto rot = identity;// glm::eulerAngleXYZ(agent.xrot, agent.yrot, agent.zrot)* scale;
+		// apply the matrix transformation to translate
+		auto trans = glm::translate(rot, glm::vec3(agent.x, agent.y, agent.z));
+		
+		// create a mat4 with the transform data xrot, yrot, zrot, x,y,z
+		//modelInstances.push_back(ModelInstance(m.get(), trans));
+		modelInstances.push_back(ModelInstance(m.get(), glm::transpose(glm::translate(identity, glm::vec3(agent.x, agent.y, agent.z)) * glm::rotate(identity, frand() * 3.14159265f, randomInSphere(1.0)))));
+
 	}
 
+	std::vector<std::unique_ptr<Model>> models;
+	// add one for the dome light we are about to make.
+	models.reserve(1 + modelLookup.size());
+	// done with modelLookup
+	for (auto& m : modelLookup) {
+		models.push_back(std::move(m.second));
+	}
+	modelLookup.clear();
+	
 	auto domelight = Model::CreateSphere(vec3(0, 0, 0), 300.0, Material::DiffuseLight(vec3(0.5f, 0.5f, 0.5f)), true);
 	models.push_back(std::unique_ptr<Model>(domelight));
 
-	// create an instance for each model:
-	std::vector<ModelInstance> modelInstances;
-	for (auto& m : models) {
-		modelInstances.push_back(ModelInstance(m.get()));
-	}
+	modelInstances.push_back(ModelInstance(domelight));
 
 	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }

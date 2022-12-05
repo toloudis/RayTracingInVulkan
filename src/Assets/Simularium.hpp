@@ -43,31 +43,73 @@ namespace simularium {
         CameraPosition()
         {
             position = { 0, 0, 120 };
-            lookAtPoint = { 0, 0, 0 };
+            lookAtPosition = { 0, 0, 0 };
             upVector = { 0, 1, 0 };
             fovDegrees = 50;
         }
 
         std::array<float, 3> position;
-        std::array<float, 3> lookAtPoint;
+        std::array<float, 3> lookAtPosition;
         std::array<float, 3> upVector;
         float fovDegrees;
     };
 
+    struct AgentType {
+        std::string name;
+        struct Geometry {
+            std::string displayType;
+            std::string color;
+            std::string url;
+        } geometry;
+
+        AgentType() : name(""), geometry({"SPHERE", "#FFFFFF", ""}) {}
+    };
+    struct Unit {
+        std::string name;
+        float magnitude;
+    };
     struct TrajectoryFileProperties {
-        std::string fileName = "";
-        std::size_t numberOfFrames = 0;
+        //std::string fileName = "";
+		Unit timeUnits = { "s", 1.0f };
+		Unit spatialUnits = { "nm", 1.0f };
         double timeStepSize = 100;
-        float spatialUnitFactorMeters = 1e-9f;
-        std::unordered_map<std::size_t, std::string> typeMapping;
-        float boxX, boxY, boxZ;
+        int32_t totalSteps = 1;
+        std::array<float, 3> size;
         CameraPosition cameraDefault;
+        std::unordered_map<std::size_t, AgentType> typeMapping;
 
         std::string Str()
         {
-            return "TrajectoryFileProperties | File Name " + this->fileName + " | Number of Frames " + std::to_string(this->numberOfFrames) + " | TimeStep Size " + std::to_string(this->timeStepSize) + " | spatialUnitFactor " + std::to_string(this->spatialUnitFactorMeters) + " | Box Size [" + std::to_string(boxX) + "," + std::to_string(boxY) + "," + std::to_string(boxZ) + "]";
+            return "TrajectoryFileProperties | Number of Frames " + std::to_string(this->totalSteps) + " | TimeStep Size " + std::to_string(this->timeStepSize) + " | Box Size [" + std::to_string(size[0]) + "," + std::to_string(size[1]) + "," + std::to_string(size[2]) + "]";
         }
         void fromJson(const nlohmann::json& fprops);
+#if 0
+        {
+            "version": 3,
+                "timeUnits" : { "magnitude": 1.0, "name" : "ns" },
+                "timeStepSize" : 0.1,
+                "totalSteps" : 4001,
+                "spatialUnits" : { "magnitude": 1.0, "name" : "nm" },
+                "size" : { "x": 25.0, "y" : 25.0, "z" : 25.0 },
+                "cameraDefault" : {
+                    "position": { "x": 0.0, "y" : 0.0, "z" : 120.0 },
+                    "lookAtPosition" : { "x": 0.0, "y" : 0.0, "z" : 0.0 },
+                    "upVector" : { "x": 0.0, "y" : 1.0, "z" : 0.0 },
+                    "fovDegrees" : 75.0
+            },
+                "typeMapping": {
+                    "0": {
+                        "name": "Head",
+                            "geometry" : { "displayType": "SPHERE", "color" : "#94a7fc" }
+                    },
+                        "1" : {
+                        "name": "Tail",
+                            "geometry" : { "displayType": "SPHERE", "color" : "#bf5736" }
+                    }
+                }
+        }
+
+#endif
 
     };
 

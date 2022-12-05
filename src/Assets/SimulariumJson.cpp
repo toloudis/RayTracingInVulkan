@@ -5,27 +5,99 @@
 #include <iostream>
 #include <sstream>
 
+#if 0
+{
+    "version": 3,
+        "timeUnits" : { "magnitude": 1.0, "name" : "ns" },
+        "timeStepSize" : 0.1,
+        "totalSteps" : 4001,
+        "spatialUnits" : { "magnitude": 1.0, "name" : "nm" },
+        "size" : { "x": 25.0, "y" : 25.0, "z" : 25.0 },
+        "cameraDefault" : {
+        "position": { "x": 0.0, "y" : 0.0, "z" : 120.0 },
+            "lookAtPosition" : { "x": 0.0, "y" : 0.0, "z" : 0.0 },
+            "upVector" : { "x": 0.0, "y" : 1.0, "z" : 0.0 },
+            "fovDegrees" : 75.0
+    },
+        "typeMapping": {
+            "0": {
+                "name": "Head",
+                    "geometry" : { "displayType": "SPHERE", "color" : "#94a7fc" }
+            },
+                "1" : {
+                "name": "Tail",
+                    "geometry" : { "displayType": "SPHERE", "color" : "#bf5736" }
+            }
+        }
+}
+
+#endif
+
 namespace aics {
 namespace simularium {
+    static void getFloat3XYZ(const nlohmann::json& parent, std::string name, std::array<float, 3>& out) {
+        if (parent.contains(name)) {
+            const nlohmann::json& jvec = parent[name];
+            out[0] = jvec["x"].get<float>();
+            out[1] = jvec["y"].get<float>();
+            out[2] = jvec["z"].get<float>();
+        }
+    }
+	
     void TrajectoryFileProperties::fromJson(const nlohmann::json& fprops) {
-        const nlohmann::json& typeMapping = fprops["typeMapping"];
+        if (fprops.contains("typeMapping")) {
+            const nlohmann::json& typeMapping = fprops["typeMapping"];
 
-        for (auto it = typeMapping.begin(); it != typeMapping.end(); ++it)
-        {
-            std::size_t idKey = std::atoi(it.key().c_str());
-            const nlohmann::json& entry = it.value();
-            this->typeMapping[idKey] = entry["name"].get<std::string>();
+            for (auto it = typeMapping.begin(); it != typeMapping.end(); ++it)
+            {
+                std::size_t idKey = std::atoi(it.key().c_str());
+                const nlohmann::json& entry = it.value();
+                AgentType at;
+                at.name = entry["name"].get<std::string>();
+                if (entry.contains("geometry")) {
+                    const nlohmann::json& geometry = entry["geometry"];
+                    if (geometry.contains("displayType"))
+                        at.geometry.displayType = geometry["displayType"].get<std::string>();
+                    if (geometry.contains("url"))
+                        at.geometry.url = geometry["url"].get<std::string>();
+                    if (geometry.contains("color"))
+                        at.geometry.color = geometry["color"].get<std::string>();
+                }
+
+                this->typeMapping[idKey] = at;
+            }
+
         }
 
-        const nlohmann::json& size = fprops["size"];
-        boxX = size["x"].get<float>();
-        boxY = size["y"].get<float>();
-        boxZ = size["z"].get<float>();
+        if (fprops.contains("size")) {
+            const nlohmann::json& jsize = fprops["size"];
+            size[0] = jsize["x"].get<float>();
+            size[1] = jsize["y"].get<float>();
+            size[2] = jsize["z"].get<float>();
+        }
+        if (fprops.contains("cameraDefault")) {
+			auto jCameraDefault = fprops["cameraDefault"];
+            getFloat3XYZ(jCameraDefault, "position", cameraDefault.position);
+            getFloat3XYZ(jCameraDefault, "lookAtPosition", cameraDefault.lookAtPosition);
+            getFloat3XYZ(jCameraDefault, "upVector", cameraDefault.upVector);
+            if (jCameraDefault.contains("fovDegrees")) {
+				cameraDefault.fovDegrees = jCameraDefault["fovDegrees"].get<float>();
+            }
+        }
 
-        fileName = fprops["fileName"].get<std::string>();
-        numberOfFrames = fprops["totalSteps"].get<int>();
+        //fileName = fprops["fileName"].get<std::string>();
+        totalSteps = fprops["totalSteps"].get<int32_t>();
         timeStepSize = fprops["timeStepSize"].get<float>();
-        spatialUnitFactorMeters = fprops["spatialUnitFactorMeters"].get<float>();
+        if (fprops.contains("timeUnits")) {
+            const nlohmann::json& jtimeUnits = fprops["timeUnits"];
+            timeUnits.magnitude = jtimeUnits["magnitude"].get<float>();
+            timeUnits.name = jtimeUnits["name"].get<std::string>();
+        }
+        if (fprops.contains("spatialUnits")) {
+            const nlohmann::json& jspatialUnits = fprops["spatialUnits"];
+            spatialUnits.magnitude = jspatialUnits["magnitude"].get<float>();
+            spatialUnits.name = jspatialUnits["name"].get<std::string>();
+        }
 
     }
 
@@ -45,7 +117,7 @@ namespace simularium {
             return tfp;
         }
         // virtual std::vector<Plot> getPlotData() = 0;
-        size_t SimulariumFileReaderJson::getNumFrames() { return this->getTrajectoryFileInfo().numberOfFrames; }
+        size_t SimulariumFileReaderJson::getNumFrames() { return this->getTrajectoryFileInfo().totalSteps; }
         void SimulariumFileReaderJson::getFrame(size_t theFrameNumber, TrajectoryFrame* frame) {
 			DeserializeFrame(this->mJsonRoot, theFrameNumber, *frame);
         }
