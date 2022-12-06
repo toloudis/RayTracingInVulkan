@@ -6,7 +6,10 @@
 #include "Assets/SimulariumJson.hpp"
 #include "Assets/Sphere.hpp"
 #include "Assets/Texture.hpp"
+#include "Assets/threading.hpp"
 #include "Utilities/Random.hpp"
+
+#include <algorithm>
 #include <functional>
 #include <fstream>
 #include <iostream>
@@ -418,6 +421,53 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 		}
 		modelLookup[agentType.first] = std::unique_ptr<Model>(m);
 	}
+
+
+	// usage example:
+	unsigned int min_cores = 1; // for the case when hardware_concurency fails and returns 0
+	unsigned int number_of_cores = std::max(min_cores, std::min(cores_, std::thread::hardware_concurrency() - 1));
+	{
+		std::vector<std::future<bool>> jobs;
+		Tasks tasks;
+		for (auto agentType : tfp.typeMapping) {
+			jobs.push_back(tasks.queue([&agentType]()->void {
+				aics::simularium::AgentType at = agentType.second;
+				Assets::Model* m = nullptr;
+				// parse color
+				std::string color = at.geometry.color;
+				std::array<float, 3> rgb;
+				hex2rgb(color, rgb);
+				if (at.geometry.displayType == "SPHERE") {
+					m = Model::CreateSphere(
+						vec3(0, 0, 0), 1.0, 
+						Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])), 
+						true, std::to_string(agentType.first));
+				}
+				else if (at.geometry.displayType == "OBJ") {
+					// TODO download first
+					m = Model::LoadModel(at.geometry.url);
+				}
+				else if (at.geometry.displayType == "PDB") {
+					// TODO download first
+					m = Assets::LoadCIF(at.geometry.url, Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])));
+				}
+				else {
+					m = Model::CreateSphere(
+						vec3(0, 0, 0), 1.0, 
+						Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])), 
+						true, std::to_string(agentType.first));
+				}
+				modelLookup[agentType.first] = std::unique_ptr<Model>(m);
+
+			}));
+		}
+		tasks.start(number_of_cores);
+		for_each(jobs.begin(), jobs.end(), [](auto& x) { x.get(); });
+	}
+
+
+
+
 	
 	aics::simularium::TrajectoryFrame trajectoryFrame;
 	reader->getFrame(tfp.totalSteps / 2 /*0*/, &trajectoryFrame);
