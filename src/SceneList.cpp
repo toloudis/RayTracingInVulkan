@@ -368,9 +368,10 @@ static aics::simularium::fileio::ISimulariumFile* GetReader(std::string path) {
 
 SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	// read a JSON file
-	std::string fp2("E:\\data\\readdy-new-self-ass.simularium");
+	std::string fp2__("E:\\data\\readdy-new-self-ass.simularium");
 	std::string fp2_("C:\\Users\\danielt\\Downloads\\actin.h5.simularium");
-
+	// https://aics-simularium-data.s3.us-east-2.amazonaws.com/trajectory/json_v3/bloood-plasma-1.0.simularium
+	std::string fp2("C:\\Users\\dmt\\Downloads\\bloood-plasma-1.0.simularium");
 	aics::simularium::fileio::ISimulariumFile* reader = GetReader(fp2);
 	
 	aics::simularium::TrajectoryFileProperties tfp = reader->getTrajectoryFileInfo();
@@ -391,12 +392,24 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	for (auto agentType : tfp.typeMapping) {
 		aics::simularium::AgentType at = agentType.second;
 		Assets::Model* m = nullptr;
+		// parse color
+		std::string color = at.geometry.color;
+		std::array<float, 3> rgb;
+		hex2rgb(color, rgb);
 		if (at.geometry.displayType == "SPHERE") {
-			// parse color
-			std::string color = at.geometry.color;
-			std::array<float, 3> rgb;
-			hex2rgb(color, rgb);
-			m = Model::CreateSphere(vec3(0,0,0), 1.0, Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])), true, std::to_string(agentType.first));
+			m = Model::CreateSphere(
+				vec3(0, 0, 0), 1.0, 
+				Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])), 
+				true, std::to_string(agentType.first));
+		}
+		else if (at.geometry.displayType == "PDB") {
+			// get file from asset cache!
+		}
+		else {
+			m = Model::CreateSphere(
+				vec3(0, 0, 0), 1.0, 
+				Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])), 
+				true, std::to_string(agentType.first));
 		}
 		modelLookup[agentType.first] = std::unique_ptr<Model>(m);
 	}
