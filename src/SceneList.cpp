@@ -402,8 +402,13 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 				Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])), 
 				true, std::to_string(agentType.first));
 		}
+		else if (at.geometry.displayType == "OBJ") {
+			// TODO download first
+			m = Model::LoadModel(at.geometry.url);
+		}
 		else if (at.geometry.displayType == "PDB") {
-			// get file from asset cache!
+			// TODO download first
+			m = Assets::LoadCIF(at.geometry.url, Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])));
 		}
 		else {
 			m = Model::CreateSphere(
