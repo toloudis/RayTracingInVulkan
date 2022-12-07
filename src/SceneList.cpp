@@ -466,6 +466,8 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 				}
 				else if (at.geometry.displayType == "PDB") {
 					// download first
+					// not using pdb name for now in case of collisions
+					// to handle collisions we need to make sure we haven't already started downloading
 					std::string tmpname = "temp_" + std::to_string(agentType.first) + ".cif";
 
 					std::string actualUrl = at.geometry.url;
