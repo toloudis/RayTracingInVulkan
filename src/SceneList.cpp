@@ -392,6 +392,7 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 
 	// get all the scene's geometries
 	std::unordered_map<std::size_t, std::unique_ptr<Model>> modelLookup;
+#if 0
 	for (auto agentType : tfp.typeMapping) {
 		aics::simularium::AgentType at = agentType.second;
 		Assets::Model* m = nullptr;
@@ -421,16 +422,17 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 		}
 		modelLookup[agentType.first] = std::unique_ptr<Model>(m);
 	}
-
+#endif
 
 	// usage example:
 	unsigned int min_cores = 1; // for the case when hardware_concurency fails and returns 0
-	unsigned int number_of_cores = std::max(min_cores, std::min(cores_, std::thread::hardware_concurrency() - 1));
+	unsigned int number_of_cores = std::max(min_cores, std::min(6u, std::thread::hardware_concurrency() - 2u));
+	std::mutex mutex;
 	{
 		std::vector<std::future<bool>> jobs;
 		Tasks tasks;
 		for (auto agentType : tfp.typeMapping) {
-			jobs.push_back(tasks.queue([&agentType]()->void {
+			jobs.push_back(tasks.queue([agentType, &modelLookup, &mutex]()->bool {
 				aics::simularium::AgentType at = agentType.second;
 				Assets::Model* m = nullptr;
 				// parse color
@@ -439,26 +441,37 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 				hex2rgb(color, rgb);
 				if (at.geometry.displayType == "SPHERE") {
 					m = Model::CreateSphere(
-						vec3(0, 0, 0), 1.0, 
-						Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])), 
+						vec3(0, 0, 0), 1.0,
+						Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])),
 						true, std::to_string(agentType.first));
 				}
 				else if (at.geometry.displayType == "OBJ") {
 					// TODO download first
-					m = Model::LoadModel(at.geometry.url);
+//					m = Model::LoadModel(at.geometry.url);
+					m = Model::CreateSphere(
+						vec3(0, 0, 0), 1.0,
+						Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])),
+						true, std::to_string(agentType.first));
 				}
 				else if (at.geometry.displayType == "PDB") {
 					// TODO download first
-					m = Assets::LoadCIF(at.geometry.url, Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])));
+	//				m = Assets::LoadCIF(at.geometry.url, Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])));
+					m = Model::CreateSphere(
+						vec3(0, 0, 0), 1.0,
+						Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])),
+						true, std::to_string(agentType.first));
 				}
 				else {
 					m = Model::CreateSphere(
-						vec3(0, 0, 0), 1.0, 
-						Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])), 
+						vec3(0, 0, 0), 1.0,
+						Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])),
 						true, std::to_string(agentType.first));
 				}
-				modelLookup[agentType.first] = std::unique_ptr<Model>(m);
-
+				{
+					std::lock_guard<std::mutex> lk(mutex);
+					modelLookup[agentType.first] = std::unique_ptr<Model>(m);
+				}
+				return true;
 			}));
 		}
 		tasks.start(number_of_cores);

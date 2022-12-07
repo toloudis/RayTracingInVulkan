@@ -51,27 +51,6 @@ parallel_for(size_t nb_elements, std::function<void(size_t start, size_t end)> f
     std::for_each(my_threads.begin(), my_threads.end(), std::mem_fn(&std::thread::join));
 }
 
-// queue( lambda ) will enqueue the lambda into the tasks for the threads
-// to use.  A future of the type the lambda returns is given to let you get
-// the result out.
-template<class F, class R>
-std::future<R>
-Tasks::queue(F&& f)
-{
-  // wrap the function object into a packaged task, splitting
-  // execution from the return value:
-  std::packaged_task<R()> p(std::forward<F>(f));
-
-  auto r = p.get_future(); // get the return value before we hand off the task
-  {
-    std::unique_lock<std::mutex> l(m);
-    work.emplace_back(std::move(p)); // store the task<R()> as a task<void()>
-  }
-  v.notify_one(); // wake a thread to work on the task
-
-  return r; // return the future result of the task
-}
-
 // start N threads in the thread pool.
 void
 Tasks::start(std::size_t N)
