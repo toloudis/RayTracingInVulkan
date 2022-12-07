@@ -1,4 +1,8 @@
+#ifdef _WIN32
+#define NOMINMAX
+#endif // _WIN32
 #include "SceneList.hpp"
+#include "Assets/AssetDownloader.hpp"
 #include "Assets/LoadCifModel.hpp"
 #include "Assets/Material.hpp"
 #include "Assets/Model.hpp"
@@ -9,6 +13,8 @@
 #include "Assets/threading.hpp"
 #include "Utilities/Random.hpp"
 
+#include <glm/gtx/euler_angles.hpp>
+
 #include <algorithm>
 #include <functional>
 #include <fstream>
@@ -16,7 +22,6 @@
 #include <memory>
 #include <random>
 
-#include <glm/gtx/euler_angles.hpp>
 
 using namespace glm;
 using Assets::Material;
@@ -439,6 +444,7 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 				std::string color = at.geometry.color;
 				std::array<float, 3> rgb;
 				hex2rgb(color, rgb);
+				AssetDownloader ad;
 				if (at.geometry.displayType == "SPHERE") {
 					m = Model::CreateSphere(
 						vec3(0, 0, 0), 1.0,
@@ -446,20 +452,44 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 						true, std::to_string(agentType.first));
 				}
 				else if (at.geometry.displayType == "OBJ") {
-					// TODO download first
-//					m = Model::LoadModel(at.geometry.url);
-					m = Model::CreateSphere(
-						vec3(0, 0, 0), 1.0,
-						Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])),
-						true, std::to_string(agentType.first));
+					// download first
+					std::string tmpname = "temp_" + std::to_string(agentType.first) + ".obj";
+					if (ad.download(at.geometry.url, tmpname, nullptr)) {
+						m = Model::LoadModel(tmpname);
+					}
+					else {
+						m = Model::CreateSphere(
+							vec3(0, 0, 0), 1.0,
+							Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])),
+							true, std::to_string(agentType.first));
+					}
 				}
 				else if (at.geometry.displayType == "PDB") {
-					// TODO download first
-	//				m = Assets::LoadCIF(at.geometry.url, Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])));
-					m = Model::CreateSphere(
-						vec3(0, 0, 0), 1.0,
-						Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])),
-						true, std::to_string(agentType.first));
+					// download first
+					std::string tmpname = "temp_" + std::to_string(agentType.first) + ".cif";
+
+					std::string actualUrl = at.geometry.url;
+					if (actualUrl.rfind("http", 0) == 0) {
+						// assume this is a PDB ID to be loaded from the actual PDB
+						// if not a valid ID, then download will fail.
+						std::string pdbID = actualUrl;
+						// prefer mmCIF first. If this fails, we will try .pdb.
+						// TODO:
+						// Can we confirm that the rcsb.org servers have every id as a cif file?
+						// If so, then we don't need to do this second try and we can always use .cif.
+						actualUrl = "https://files.rcsb.org/download/" + pdbID + "-assembly1.cif";
+					}
+					
+					if (ad.download(actualUrl, tmpname, nullptr)) {
+						std::cout << "Downloaded " << actualUrl << " to " << tmpname << std::endl;
+						m = Assets::LoadCIF(tmpname, Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])));
+					}
+					else {
+						m = Model::CreateSphere(
+							vec3(0, 0, 0), 1.0,
+							Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])),
+							true, std::to_string(agentType.first));
+					}
 				}
 				else {
 					m = Model::CreateSphere(
