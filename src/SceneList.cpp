@@ -469,7 +469,7 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 					std::string tmpname = "temp_" + std::to_string(agentType.first) + ".cif";
 
 					std::string actualUrl = at.geometry.url;
-					if (actualUrl.rfind("http", 0) == 0) {
+					if (actualUrl.rfind("http", 0) != 0) {
 						// assume this is a PDB ID to be loaded from the actual PDB
 						// if not a valid ID, then download will fail.
 						std::string pdbID = actualUrl;
