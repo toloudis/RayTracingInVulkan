@@ -365,6 +365,15 @@ static void hex2rgb(std::string hex, std::array<float, 3>& out) {
 	out[1] = stoi(colori[1], nullptr, 16)/255.0f;
 	out[2] = stoi(colori[2], nullptr, 16)/255.0f;
 }
+static bool endsWith(std::string_view str, std::string_view suffix)
+{
+	return str.size() >= suffix.size() && 0 == str.compare(str.size() - suffix.size(), suffix.size(), suffix);
+}
+
+static bool startsWith(std::string_view str, std::string_view prefix)
+{
+	return str.size() >= prefix.size() && 0 == str.compare(0, prefix.size(), prefix);
+}
 
 static aics::simularium::fileio::ISimulariumFile* GetReader(std::string path) {
 	bool isBinary = aics::simularium::fileio::SimulariumFileReaderBinary::isBinarySimulariumFile(path);
@@ -379,7 +388,7 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	std::string fp2__("E:\\data\\readdy-new-self-ass.simularium");
 	std::string fp2_("C:\\Users\\danielt\\Downloads\\actin.h5.simularium");
 	// https://aics-simularium-data.s3.us-east-2.amazonaws.com/trajectory/json_v3/bloood-plasma-1.0.simularium
-	std::string fp2("C:\\Users\\dmt\\Downloads\\bloood-plasma-1.0.simularium");
+	std::string fp2("C:\\Users\\danielt\\Downloads\\bloood-plasma-1.0.simularium");
 	aics::simularium::fileio::ISimulariumFile* reader = GetReader(fp2);
 	
 	aics::simularium::TrajectoryFileProperties tfp = reader->getTrajectoryFileInfo();
@@ -455,7 +464,8 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 					// download first
 					std::string tmpname = "temp_" + std::to_string(agentType.first) + ".obj";
 					if (ad.download(at.geometry.url, tmpname, nullptr)) {
-						m = Model::LoadModel(tmpname);
+						Material mat = Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2]));
+						m = Model::LoadModel(tmpname, &mat);
 					}
 					else {
 						m = Model::CreateSphere(
@@ -468,10 +478,10 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 					// download first
 					// not using pdb name for now in case of collisions
 					// to handle collisions we need to make sure we haven't already started downloading
-					std::string tmpname = "temp_" + std::to_string(agentType.first) + ".cif";
+					std::string tmpname = "temp_" + std::to_string(agentType.first);
 
 					std::string actualUrl = at.geometry.url;
-					if (actualUrl.rfind("http", 0) != 0) {
+					if (!startsWith(actualUrl, "http")) {
 						// assume this is a PDB ID to be loaded from the actual PDB
 						// if not a valid ID, then download will fail.
 						std::string pdbID = actualUrl;
@@ -480,13 +490,30 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 						// Can we confirm that the rcsb.org servers have every id as a cif file?
 						// If so, then we don't need to do this second try and we can always use .cif.
 						actualUrl = "https://files.rcsb.org/download/" + pdbID + "-assembly1.cif";
-					}
-					
-					if (ad.download(actualUrl, tmpname, nullptr)) {
-						std::cout << "Downloaded " << actualUrl << " to " << tmpname << std::endl;
-						m = Assets::LoadCIF(tmpname, Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])));
+						tmpname += ".cif";
 					}
 					else {
+						if (endsWith(actualUrl, ".pdb")) {
+							tmpname += ".pdb";
+						}
+						else if (endsWith(actualUrl, ".cif")) {
+							tmpname += ".cif";
+						}
+						else {}
+					}
+					std::cout << at.name << " : Downloading " << actualUrl << " to " << tmpname << std::endl;
+
+					if (ad.download(actualUrl, tmpname, nullptr)) {
+						std::cout << at.name << " : Downloaded " << actualUrl << " to " << tmpname << std::endl;
+						if (endsWith(tmpname, ".cif")) {
+							m = Assets::LoadCIF(tmpname, Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])));
+						}
+						else if (endsWith(tmpname, ".pdb")) {
+							m = Assets::LoadPDB(tmpname, Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])));
+						}
+					}
+					else {
+						std::cout << at.name << " : FAILED DOWNLOAD " << actualUrl << std::endl;
 						m = Model::CreateSphere(
 							vec3(0, 0, 0), 1.0,
 							Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])),
@@ -527,18 +554,22 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	std::vector<ModelInstance> modelInstances;
 	for (auto agent: trajectoryFrame.data) {
 		auto& m = modelLookup[(std::size_t)agent.type];
-
+		auto agentType = tfp.typeMapping[(std::size_t)agent.type];
+		
 		auto identity = glm::mat4(1.0f); // construct identity matrix
 		// scale geom by radius!
-		auto scale = identity;// glm::scale(identity, glm::vec3(agent.collision_radius, agent.collision_radius, agent.collision_radius));
+		auto scale = identity;
+		if (agentType.geometry.displayType == "OBJ" || agentType.geometry.displayType == "SPHERE") {
+			scale = glm::scale(identity, glm::vec3(agent.collision_radius, agent.collision_radius, agent.collision_radius));
+		}
 		// apply the matrix transformation to rotate
-		auto rot = identity;// glm::eulerAngleXYZ(agent.xrot, agent.yrot, agent.zrot)* scale;
+		auto rot = glm::eulerAngleXYZ(agent.xrot, agent.yrot, agent.zrot);
 		// apply the matrix transformation to translate
-		auto trans = glm::translate(rot, glm::vec3(agent.x, agent.y, agent.z));
+		//auto trans = glm::translate(rot, glm::vec3(agent.x, agent.y, agent.z));
 		
 		// create a mat4 with the transform data xrot, yrot, zrot, x,y,z
 		//modelInstances.push_back(ModelInstance(m.get(), trans));
-		modelInstances.push_back(ModelInstance(m.get(), glm::transpose(glm::translate(identity, glm::vec3(agent.x, agent.y, agent.z)) * glm::rotate(identity, frand() * 3.14159265f, randomInSphere(1.0)))));
+		modelInstances.push_back(ModelInstance(m.get(), glm::transpose(glm::translate(identity, glm::vec3(agent.x, agent.y, agent.z)) * rot * scale)));
 
 	}
 

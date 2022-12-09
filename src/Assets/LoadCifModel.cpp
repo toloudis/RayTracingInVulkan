@@ -2,6 +2,8 @@
 #include "readcif.h"
 #include "Utilities/Random.hpp"
 
+#include <dsrpdb/PDB.h>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
@@ -10,6 +12,7 @@
 #include <chrono>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <regex>
 #include <sstream>
@@ -504,7 +507,7 @@ return ret;
 		//modelInstances.push_back(ModelInstance(models[models.size()-1].get()));
 	}
 
-	Model* LoadCIF(const std::string& filename, const Material& material) {
+	Model* LoadCIF(const std::string& filename, const Material& material, float scale) {
 		std::cout << "- loading '" << filename << "'... " << std::flush;
 		const auto timer = std::chrono::high_resolution_clock::now();
 		const std::string materialPath = std::filesystem::path(filename).parent_path().string();
@@ -527,8 +530,58 @@ return ret;
 		std::cout << n << " atoms\n";
 		for (size_t i = 0; i < n; ++i) {
 			Atom& a = extract.atoms[i];
-			vertices.push_back(glm::vec3(a.x, a.y, a.z));
-			radii.push_back(1.0f);
+			vertices.push_back(glm::vec3(a.x*scale, a.y*scale, a.z*scale));
+			radii.push_back(0.25f);
+		}
+
+		const auto elapsed = std::chrono::duration<float, std::chrono::seconds::period>(std::chrono::high_resolution_clock::now() - timer).count();
+
+		std::cout << elapsed << "s" << std::endl;
+
+		return Model::CreateSphereGroup(std::move(vertices), std::move(radii), material, true, filename);
+
+	}
+
+	Model* LoadPDB(const std::string& filename, const Material& material, float scale) {
+		std::cout << "- loading '" << filename << "'... " << std::flush;
+		const auto timer = std::chrono::high_resolution_clock::now();
+		const std::string materialPath = std::filesystem::path(filename).parent_path().string();
+
+		std::vector<glm::vec3> vertices;
+		std::vector<float> radii;
+
+		try{
+		// create istream from filename
+		std::ifstream ifs(filename);
+		dsrpdb::PDB pdb(ifs);
+		for (auto i = pdb.models_begin(); i != pdb.models_end(); ++i) {
+			auto model = *i;
+			for (auto j = 0; j != model.number_of_chains(); ++j) {
+				auto chain = model.chain(j);
+				
+				for (auto k = chain.atoms_begin(); k != chain.atoms_end(); ++k) {
+					auto atom = (*k).second;
+					auto p = atom.cartesian_coords();
+					vertices.push_back(glm::vec3(p.x() * scale, p.y() * scale, p.z() * scale));
+					radii.push_back(0.25f);
+				}
+#if 0
+				for (auto k = chain.residues_begin(); k != chain.residues_end(); ++k) {
+					auto residue = *k;
+					for (auto l = residue.atoms_begin(); l != residue.atoms_end(); ++l) {
+						auto atom = *l;
+						//std::cout << atom.name() << " " << atom.x() << " " << atom.y() << " " << atom.z() << std::endl;
+						vertices.push_back(glm::vec3(atom.x() * scale, atom.y() * scale, atom.z() * scale));
+						radii.push_back(0.25f);
+					}
+				}
+#endif
+			}
+		}
+
+		}
+		catch (std::exception& e) {
+			std::cerr << e.what() << '\n';
 		}
 
 		const auto elapsed = std::chrono::duration<float, std::chrono::seconds::period>(std::chrono::high_resolution_clock::now() - timer).count();

@@ -53,7 +53,7 @@ namespace Assets {
 		return Model::CreateSphereGroup(v, r, Material::Lambertian(vec3(0.7f, 0.7f, 0.7f)), true, name);
 	}
 
-Model* Model::LoadModel(const std::string& filename)
+Model* Model::LoadModel(const std::string& filename, const Material* materialoverride)
 {
 	std::cout << "- loading '" << filename << "'... " << std::flush;
 
@@ -90,12 +90,7 @@ Model* Model::LoadModel(const std::string& filename)
 
 	if (materials.empty())
 	{
-		Material m{};
-
-		m.Diffuse = vec4(0.7f, 0.7f, 0.7f, 1.0);
-		m.DiffuseTextureId = -1;
-
-		materials.emplace_back(m);
+		materials.emplace_back(*materialoverride);
 	}
 
 	// Geometry

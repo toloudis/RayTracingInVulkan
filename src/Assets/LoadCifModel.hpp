@@ -8,7 +8,8 @@ namespace Assets
 {
 	struct Material;
 
-	Model* LoadCIF(const std::string& filename, const Material& material);
+	Model* LoadCIF(const std::string& filename, const Material& material, float scale = 0.1f);
+	Model* LoadPDB(const std::string& filename, const Material& material, float scale = 0.1f);
 
 	// TODO modify this to load multiple models and instances from within one cif file
 	void LoadCIFAsScene(const std::string& filename, std::vector<std::unique_ptr<Model>>& models, std::vector<ModelInstance>& modelInstances);
