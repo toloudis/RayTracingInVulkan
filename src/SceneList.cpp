@@ -550,7 +550,8 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 
 
 	const auto i = mat4(1);
-
+	size_t nAtoms = 0;
+	size_t nAgents = 0;
 	std::vector<ModelInstance> modelInstances;
 	for (auto agent: trajectoryFrame.data) {
 		auto& m = modelLookup[(std::size_t)agent.type];
@@ -570,8 +571,14 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 		// create a mat4 with the transform data xrot, yrot, zrot, x,y,z
 		//modelInstances.push_back(ModelInstance(m.get(), trans));
 		modelInstances.push_back(ModelInstance(m.get(), glm::transpose(glm::translate(identity, glm::vec3(agent.x, agent.y, agent.z)) * rot * scale)));
-
+		if (m->Procedural()) {
+			nAtoms += m->Procedural()->NumBoundingBoxes();
+		}
+		nAgents += 1;
 	}
+	std::cout << "NSPHERES " << nAtoms << std::endl;
+
+
 
 	std::vector<std::unique_ptr<Model>> models;
 	// add one for the dome light we are about to make.
