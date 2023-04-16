@@ -7,6 +7,7 @@
 #include <functional>
 #include <mutex>
 #include <condition_variable>
+#include <thread>
 
 class AssetDownloader {
 
@@ -80,7 +81,7 @@ class AssetCache {
                 curl_off_t ultotal,
                 curl_off_t ulnow)->int {
                 // TODO check for abort?
-                printf("Downloaded %lld of %lld bytes\r\n", dlnow, dltotal);
+                printf("Downloaded %lld of %lld bytes\r\n", (long long int)dlnow, (long long int)dltotal);
                 return CURL_PROGRESSFUNC_CONTINUE;
                 });
 

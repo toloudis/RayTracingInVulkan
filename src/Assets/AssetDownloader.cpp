@@ -13,7 +13,7 @@ namespace
         return size * nmemb;
     }
 
-
+#if 0
     int progress_callback(
         void *clientp,
         curl_off_t dltotal,
@@ -27,10 +27,11 @@ namespace
         curl_easy_getinfo(curl_handle, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &dlt);
 
         // TOOD check for abort?
-        printf("Downloaded %lld of %lld bytes\r\n", dlnow, dlt);
+        printf("Downloaded %lld of %lld bytes\r\n", (long long int)dlnow, (long long int)dlt);
         return CURL_PROGRESSFUNC_CONTINUE;
     }
 
+#endif
 }
 
 AssetDownloader::AssetDownloader()

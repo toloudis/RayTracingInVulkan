@@ -23,6 +23,7 @@ MA 02111-1307, USA. */
 #include "pdb_utils.h"
 #include <dsrpdb_internal/Error_logger.h>
 #include <sstream>
+#include <cstring>
 
 namespace dsrpdb {
 

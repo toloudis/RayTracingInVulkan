@@ -1,88 +1,89 @@
 #ifndef AICS_SIMULARIUM_FILE_READER_H
 #define AICS_SIMULARIUM_FILE_READER_H
 
-#include <vector>
 #include <array>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "Utilities/json.hpp"
 
 namespace aics {
 namespace simularium {
-    struct AgentData;
+struct AgentData;
 
-    typedef std::vector<aics::simularium::AgentData> AgentDataFrame;
+typedef std::vector<aics::simularium::AgentData> AgentDataFrame;
 
-    struct TrajectoryFrame {
-        AgentDataFrame data;
-        float time;
-        std::size_t frameNumber;
-        TrajectoryFrame() :time(0), frameNumber(0), data({}) {}
-    };
+struct TrajectoryFrame {
+  AgentDataFrame data;
+  float time;
+  std::size_t frameNumber;
+  TrajectoryFrame() : data({}), time(0), frameNumber(0) {}
+};
 
-    struct AgentData {
-        float vis_type = 0;
-        float id = 0;
-        float type = 0;
-        float x = 0;
-        float y = 0;
-        float z = 0;
-        float xrot = 0;
-        float yrot = 0;
-        float zrot = 0;
-        float collision_radius = 0;
-        std::vector<float> subpoints;
-    };
+struct AgentData {
+  float vis_type = 0;
+  float id = 0;
+  float type = 0;
+  float x = 0;
+  float y = 0;
+  float z = 0;
+  float xrot = 0;
+  float yrot = 0;
+  float zrot = 0;
+  float collision_radius = 0;
+  std::vector<float> subpoints;
+};
 
-    //Json::Value Serialize(AgentDataFrame& adf);
-    //std::vector<float> Serialize(AgentData& ad);
+// Json::Value Serialize(AgentDataFrame& adf);
+// std::vector<float> Serialize(AgentData& ad);
 
+struct CameraPosition {
+  CameraPosition() {
+    position = {0, 0, 120};
+    lookAtPosition = {0, 0, 0};
+    upVector = {0, 1, 0};
+    fovDegrees = 50;
+  }
 
-    struct CameraPosition {
-        CameraPosition()
-        {
-            position = { 0, 0, 120 };
-            lookAtPosition = { 0, 0, 0 };
-            upVector = { 0, 1, 0 };
-            fovDegrees = 50;
-        }
+  std::array<float, 3> position;
+  std::array<float, 3> lookAtPosition;
+  std::array<float, 3> upVector;
+  float fovDegrees;
+};
 
-        std::array<float, 3> position;
-        std::array<float, 3> lookAtPosition;
-        std::array<float, 3> upVector;
-        float fovDegrees;
-    };
+struct AgentType {
+  std::string name;
+  struct Geometry {
+    std::string displayType;
+    std::string color;
+    std::string url;
+  } geometry;
 
-    struct AgentType {
-        std::string name;
-        struct Geometry {
-            std::string displayType;
-            std::string color;
-            std::string url;
-        } geometry;
+  AgentType() : name(""), geometry({"SPHERE", "#FFFFFF", ""}) {}
+};
+struct Unit {
+  std::string name;
+  float magnitude;
+};
+struct TrajectoryFileProperties {
+  // std::string fileName = "";
+  Unit timeUnits = {"s", 1.0f};
+  Unit spatialUnits = {"nm", 1.0f};
+  double timeStepSize = 100;
+  int32_t totalSteps = 1;
+  std::array<float, 3> size;
+  CameraPosition cameraDefault;
+  std::unordered_map<std::size_t, AgentType> typeMapping;
 
-        AgentType() : name(""), geometry({"SPHERE", "#FFFFFF", ""}) {}
-    };
-    struct Unit {
-        std::string name;
-        float magnitude;
-    };
-    struct TrajectoryFileProperties {
-        //std::string fileName = "";
-		Unit timeUnits = { "s", 1.0f };
-		Unit spatialUnits = { "nm", 1.0f };
-        double timeStepSize = 100;
-        int32_t totalSteps = 1;
-        std::array<float, 3> size;
-        CameraPosition cameraDefault;
-        std::unordered_map<std::size_t, AgentType> typeMapping;
-
-        std::string Str()
-        {
-            return "TrajectoryFileProperties | Number of Frames " + std::to_string(this->totalSteps) + " | TimeStep Size " + std::to_string(this->timeStepSize) + " | Box Size [" + std::to_string(size[0]) + "," + std::to_string(size[1]) + "," + std::to_string(size[2]) + "]";
-        }
-        void fromJson(const nlohmann::json& fprops);
+  std::string Str() {
+    return "TrajectoryFileProperties | Number of Frames " +
+           std::to_string(this->totalSteps) + " | TimeStep Size " +
+           std::to_string(this->timeStepSize) + " | Box Size [" +
+           std::to_string(size[0]) + "," + std::to_string(size[1]) + "," +
+           std::to_string(size[2]) + "]";
+  }
+  void fromJson(const nlohmann::json &fprops);
 #if 0
         {
             "version": 3,
@@ -110,21 +111,20 @@ namespace simularium {
         }
 
 #endif
+};
 
-    };
+namespace fileio {
 
-    namespace fileio {
+class ISimulariumFile {
+public:
+  virtual TrajectoryFileProperties getTrajectoryFileInfo() = 0;
+  // virtual std::vector<Plot> getPlotData() = 0;
+  virtual size_t getNumFrames() = 0;
+  // virtual size_t getFrameIndexAtTime(float time) = 0;
+  virtual void getFrame(size_t theFrameNumber, TrajectoryFrame *frame) = 0;
+};
 
-        class ISimulariumFile {
-        public:
-            virtual TrajectoryFileProperties getTrajectoryFileInfo() = 0;
-            // virtual std::vector<Plot> getPlotData() = 0;
-            virtual size_t getNumFrames() = 0;
-            //virtual size_t getFrameIndexAtTime(float time) = 0;
-            virtual void getFrame(size_t theFrameNumber, TrajectoryFrame* frame) = 0;
-        };
-
-    } // namespace fileio
+} // namespace fileio
 
 } // namespace simularium
 } // namespace aics

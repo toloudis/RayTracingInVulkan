@@ -338,7 +338,7 @@ static std::vector<std::string> SplitWithCharacters(const std::string& str, int 
 	size_t numSubstrings = str.length() / splitLength;
 	std::vector<std::string> ret;
 
-	for (int i = 0; i < numSubstrings; i++) {
+	for (size_t i = 0; i < numSubstrings; i++) {
 		ret.push_back(str.substr(i * splitLength, splitLength));
 	}
 
@@ -549,7 +549,7 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 //		trajectoryFrame);
 
 
-	const auto i = mat4(1);
+	//const auto i = mat4(1);
 	size_t nAtoms = 0;
 	size_t nAgents = 0;
 	std::vector<ModelInstance> modelInstances;

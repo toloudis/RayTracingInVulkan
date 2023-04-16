@@ -43,7 +43,7 @@ namespace simularium {
                 return;
             }
                 auto frameOffset = this->frameOffsets[theFrameNumber];
-                auto frameSize = this->frameLengths[theFrameNumber];
+                //auto frameSize = this->frameLengths[theFrameNumber];
 				
 				// beginning of frame is here:
                 uint8_t* frameData = this->spatialDataBlock + frameOffset;
@@ -57,7 +57,7 @@ namespace simularium {
         AgentDataFrame SimulariumFileReaderBinary::parseAgentData(uint8_t* ptr, size_t size) {
             AgentDataFrame af;
             size_t offset = 0;
-            for (int i = 0; i < size; ++i) {
+            for (size_t i = 0; i < size; ++i) {
                 AgentData ad;
                 ad.vis_type = ((float*)(ptr))[offset++];
                 ad.id = ((float*)(ptr))[offset++];
@@ -142,7 +142,7 @@ namespace simularium {
             }
             // get length of file:
             is.seekg(0, is.end);
-            size_t length = is.tellg();
+            //size_t length = is.tellg();
 			// start after signature
             is.seekg(SIGNATURE.size(), is.beg);
             uint32_t headerLength = 0;
@@ -157,7 +157,7 @@ namespace simularium {
 
             std::vector<BlockInfo> blocks(nBlocks);
             // the number of 32-bit ints after the SIGNATURE and before the toc
-            const int OFFSET_TO_TABLE_OF_CONTENTS = 3;
+            //const int OFFSET_TO_TABLE_OF_CONTENTS = 3;
             for (uint32_t i = 0; i < nBlocks; i++) {
                 BlockInfo bi;
 				is.read((char*)&bi.offset, 4);

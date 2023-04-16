@@ -16,9 +16,9 @@
 /// @param use_threads : enable / disable threads.
 ///
 ///
-void
-parallel_for(size_t nb_elements, std::function<void(size_t start, size_t end)> functor, bool use_threads)
-{
+void parallel_for(size_t nb_elements,
+                  std::function<void(size_t start, size_t end)> functor,
+                  bool use_threads) {
   // -------
   unsigned nb_threads_hint = std::thread::hardware_concurrency();
   unsigned nb_threads = nb_threads_hint == 0 ? 8 : (nb_threads_hint);
@@ -48,56 +48,46 @@ parallel_for(size_t nb_elements, std::function<void(size_t start, size_t end)> f
 
   // Wait for the other thread to finish their task
   if (use_threads)
-    std::for_each(my_threads.begin(), my_threads.end(), std::mem_fn(&std::thread::join));
+    std::for_each(my_threads.begin(), my_threads.end(),
+                  std::mem_fn(&std::thread::join));
 }
 
 // start N threads in the thread pool.
-void
-Tasks::start(std::size_t N)
-{
+void Tasks::start(std::size_t N) {
   for (std::size_t i = 0; i < N; ++i) {
     // each thread is a std::async running this->thread_task():
-    finished.push_back(std::async(std::launch::async, [this] { thread_task(); }));
+    finished.push_back(
+        std::async(std::launch::async, [this] { thread_task(); }));
   }
 }
 
 // abort() cancels all non-started tasks, and tells every working thread
 // stop running, and waits for them to finish up.
-void
-Tasks::abort()
-{
+void Tasks::abort() {
   cancel_pending();
   finish();
 }
 // cancel_pending() merely cancels all non-started tasks:
-void
-Tasks::cancel_pending()
-{
+void Tasks::cancel_pending() {
   std::unique_lock<std::mutex> l(m);
   work.clear();
 }
-// finish enques a "stop the thread" message for every thread, then waits for them:
-void
-Tasks::finish()
-{
+// finish enques a "stop the thread" message for every thread, then waits for
+// them:
+void Tasks::finish() {
   {
     std::unique_lock<std::mutex> l(m);
-    for (auto&& unused : finished) {
+    for ([[maybe_unused]] auto &&unused : finished) {
       work.push_back({});
     }
   }
   v.notify_all();
   finished.clear();
 }
-Tasks::~Tasks()
-{
-  finish();
-}
+Tasks::~Tasks() { finish(); }
 
 // the work that a worker thread does:
-void
-Tasks::thread_task()
-{
+void Tasks::thread_task() {
   while (true) {
     // pop a task off the queue:
     std::packaged_task<bool()> f;

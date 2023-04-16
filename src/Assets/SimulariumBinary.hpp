@@ -26,7 +26,7 @@ namespace simularium {
 
             static bool isBinarySimulariumFile(std::string filePath);
         private:
-            const enum BlockTypeEnum : uint32_t {
+            enum BlockTypeEnum : uint32_t {
                 // type = 0 : spatial data block in JSON
                 SPATIAL_DATA_JSON = 0,
                 // type = 1 : trajectory info block in JSON
