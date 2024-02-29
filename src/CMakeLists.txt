@@ -51,15 +51,6 @@ set(src_files_assets
 	Assets/Vertex.hpp
 )
 
-set(src_files_imgui
-	ImGui/imgui_freetype.cpp
-	ImGui/imgui_freetype.h
-	ImGui/imgui_impl_glfw.cpp
-	ImGui/imgui_impl_glfw.h
-	ImGui/imgui_impl_vulkan.cpp
-	ImGui/imgui_impl_vulkan.h
-)
-
 set(src_files_utilities
 	Utilities/Console.cpp
 	Utilities/Console.hpp
@@ -181,19 +172,17 @@ set(src_files
 )
 
 source_group("Assets" FILES ${src_files_assets} ${src_files_dsrpdb})
-source_group("ImGui" FILES ${src_files_imgui})
 source_group("Utilities" FILES ${src_files_utilities})
 source_group("Vulkan" FILES ${src_files_vulkan})
 source_group("Vulkan.RayTracing" FILES ${src_files_vulkan_raytracing})
 source_group("Main" FILES ${src_files})
 
-add_executable(${exe_name}
-	${src_files_assets}
+add_executable(${exe_name} 
+	${src_files_assets} 
 	${src_files_dsrpdb}
-	${src_files_imgui}
-	${src_files_utilities}
-	${src_files_vulkan}
-	${src_files_vulkan_raytracing}
+	${src_files_utilities} 
+	${src_files_vulkan} 
+	${src_files_vulkan_raytracing} 
 	${src_files}
 )
 
@@ -205,7 +194,7 @@ endif()
 
 add_dependencies(${exe_name} Assets)
 set_target_properties(${exe_name} PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
-target_include_directories(${exe_name} PRIVATE . ${Boost_INCLUDE_DIRS} ${glfw3_INCLUDE_DIRS} ${glm_INCLUDE_DIRS} ${STB_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS})
+target_include_directories(${exe_name} PRIVATE . ${STB_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS})
 target_include_directories(${exe_name} PRIVATE ./Assets/dsrpdb/include)
 target_link_directories(${exe_name} PRIVATE ${Vulkan_LIBRARY})
-target_link_libraries(${exe_name} PRIVATE ${Boost_LIBRARIES} CURL::libcurl freetype glfw glm::glm imgui::imgui tinyobjloader::tinyobjloader ${Vulkan_LIBRARIES} ${extra_libs})
+target_link_libraries(${exe_name} PRIVATE Boost::boost Boost::exception Boost::program_options glfw glm::glm imgui::imgui tinyobjloader::tinyobjloader ${Vulkan_LIBRARIES} ${extra_libs})
