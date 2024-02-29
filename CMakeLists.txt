@@ -47,18 +47,17 @@ if (UNIX)
 
 endif ()
 
-find_package(Boost REQUIRED COMPONENTS exception program_options)
+find_package(Boost REQUIRED COMPONENTS exception program_options) 
 find_package(CURL CONFIG REQUIRED)
-find_package(freetype CONFIG REQUIRED)
-find_package(glfw3 CONFIG REQUIRED)
+find_package(glfw3 REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
+find_package(Stb REQUIRED)
 find_package(tinyobjloader CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
-find_path(STB_INCLUDE_DIRS "stb.h")
 
-
-add_definitions(-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS)
+#add_definitions(-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS)
+#add_definitions(-DDIMGUI_DISABLE_OBSOLETE_KEYIO)
 
 IF (NOT Vulkan_FOUND)
     message(FATAL_ERROR "Could not find Vulkan library!")

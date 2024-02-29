@@ -50,6 +50,7 @@ Device::Device(
 	// Find the graphics queue.
 	const auto graphicsFamily = FindQueue(queueFamilies, "graphics", VK_QUEUE_GRAPHICS_BIT, 0);
 	const auto computeFamily = FindQueue(queueFamilies, "compute", VK_QUEUE_COMPUTE_BIT, VK_QUEUE_GRAPHICS_BIT);
+
 	//Commented out the dedicated transfer queue, as it's never used (relic from Vulkan tutorial) 
 	//and causes problems with RADV (see https://github.com/NVIDIA/Q2RTX/issues/147).
 	//const auto transferFamily = FindQueue(queueFamilies, "transfer", VK_QUEUE_TRANSFER_BIT, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
