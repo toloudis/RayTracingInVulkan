@@ -7,10 +7,10 @@ jobs:
 
     runs-on: windows-2022
     env:
-      SDK_VERSION: 1.3.268.0
+      SDK_VERSION: 1.3.280.0
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Download Vulkan SDK
       run: Invoke-WebRequest "https://sdk.lunarg.com/sdk/download/${env:SDK_VERSION}/windows/vulkan_sdk.exe?Human=true" -OutFile vulkan_sdk.exe -v
     - name: Install Vulkan SDK
@@ -27,7 +27,7 @@ jobs:
     # (originally at https://github.com/warrenbuckley/Setup-MSBuild, later on adopted by Microsoft themselves).
     # Comedy bonus: GitHub is now owned by Microsoft.
     - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v1
+      uses: microsoft/setup-msbuild@v2
     - name: Compile raytracer
       run: |
         set VULKAN_SDK=C:\VulkanSDK\%SDK_VERSION%
