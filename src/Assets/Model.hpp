@@ -22,6 +22,8 @@ public:
                                   const std::vector<float> &radius,
                                   const Material &material, bool isProcedural,
                                   const std::string &name);
+  static Model *CreateVolume(const glm::vec3 &p0, const glm::vec3 &p1,
+                          const Material &material);
   static Model *
   CreateRandomSphereGroup(int nSpheres, float groupRadius = 150.0f,
                           float atomRadius = 2.0f, float atomRadiusMax = 2.0f,
@@ -53,6 +55,8 @@ public:
   uint32_t NumberOfMaterials() const {
     return static_cast<uint32_t>(materials_.size());
   }
+
+  const std::string &Name() const { return name_; }
 
 private:
   Model(std::vector<Vertex> &&vertices, std::vector<uint32_t> &&indices,

@@ -597,6 +597,11 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 
 	modelInstances.push_back(ModelInstance(domelight));
 
+	// let's add a volume here:
+	auto volume = Model::CreateVolume(vec3(0, 0, 0), vec3(10, 10, 10), Material::Lambertian(vec3(0.5f, 0.5f, 0.5f)));
+	models.push_back(std::unique_ptr<Model>(volume));
+	modelInstances.push_back(ModelInstance(volume));
+
 	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
 }
 

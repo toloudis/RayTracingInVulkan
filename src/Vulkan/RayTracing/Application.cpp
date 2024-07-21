@@ -339,10 +339,16 @@ void Application::CreateTopLevelStructures(VkCommandBuffer commandBuffer)
 		// If element was found
 		if (modelIndex != -1)
 		{
-			// TODO IF VOLUME THEN HIT GROUP 2
+			bool isVolume = modelInstance.model_->Name() == "volume";
+			if (isVolume) {
+				instances.push_back(TopLevelAccelerationStructure::CreateInstance(
+					bottomAs_[modelIndex], modelInstance.transform_, (uint32_t)modelIndex, 2));
+			}
+			else {
+				instances.push_back(TopLevelAccelerationStructure::CreateInstance(
+					bottomAs_[modelIndex], modelInstance.transform_, (uint32_t)modelIndex, modelInstance.model_->Procedural() ? 1 : 0));
+			}
 
-			instances.push_back(TopLevelAccelerationStructure::CreateInstance(
-				bottomAs_[modelIndex], modelInstance.transform_, (uint32_t)modelIndex, modelInstance.model_->Procedural() ? 1 : 0));
 			instanceId++;
 		}
 		else {
