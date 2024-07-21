@@ -13,6 +13,7 @@
 #include "Assets/threading.hpp"
 #include "Utilities/Random.hpp"
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
 
 #include <algorithm>
