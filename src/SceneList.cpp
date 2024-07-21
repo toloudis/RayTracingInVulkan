@@ -388,9 +388,10 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	std::string fp2__("E:\\data\\readdy-new-self-ass.simularium");
 	std::string fp2_("C:\\Users\\danielt\\Downloads\\actin.h5.simularium");
 	// https://aics-simularium-data.s3.us-east-2.amazonaws.com/trajectory/json_v3/bloood-plasma-1.0.simularium
-	std::string fp2("C:\\Users\\danielt\\Downloads\\bloood-plasma-1.0.simularium");
+	std::string fpremote = "https://aics-simularium-data.s3.us-east-2.amazonaws.com/trajectory/blood-plasma-1.0.simularium";
+	std::string fp2("C:\\Users\\dmt\\Downloads\\bloood-plasma-1.0.simularium");
 	aics::simularium::fileio::ISimulariumFile* reader = GetReader(fp2);
-	
+
 	aics::simularium::TrajectoryFileProperties tfp = reader->getTrajectoryFileInfo();
 
 	camera.ModelView = lookAt(vec3(tfp.cameraDefault.position[0], tfp.cameraDefault.position[1], tfp.cameraDefault.position[2]),
@@ -416,8 +417,8 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 		hex2rgb(color, rgb);
 		if (at.geometry.displayType == "SPHERE") {
 			m = Model::CreateSphere(
-				vec3(0, 0, 0), 1.0, 
-				Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])), 
+				vec3(0, 0, 0), 1.0,
+				Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])),
 				true, std::to_string(agentType.first));
 		}
 		else if (at.geometry.displayType == "OBJ") {
@@ -430,8 +431,8 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 		}
 		else {
 			m = Model::CreateSphere(
-				vec3(0, 0, 0), 1.0, 
-				Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])), 
+				vec3(0, 0, 0), 1.0,
+				Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])),
 				true, std::to_string(agentType.first));
 		}
 		modelLookup[agentType.first] = std::unique_ptr<Model>(m);
@@ -526,6 +527,7 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 						Material::Lambertian(vec3(rgb[0], rgb[1], rgb[2])),
 						true, std::to_string(agentType.first));
 				}
+				// add model!
 				{
 					std::lock_guard<std::mutex> lk(mutex);
 					modelLookup[agentType.first] = std::unique_ptr<Model>(m);
@@ -540,7 +542,7 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 
 
 
-	
+
 	aics::simularium::TrajectoryFrame trajectoryFrame;
 	reader->getFrame(tfp.totalSteps / 2 /*0*/, &trajectoryFrame);
 //	bool ok = reader.DeserializeFrame(
@@ -556,7 +558,7 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 	for (auto agent: trajectoryFrame.data) {
 		auto& m = modelLookup[(std::size_t)agent.type];
 		auto agentType = tfp.typeMapping[(std::size_t)agent.type];
-		
+
 		auto identity = glm::mat4(1.0f); // construct identity matrix
 		// scale geom by radius!
 		auto scale = identity;
@@ -567,7 +569,7 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 		auto rot = glm::eulerAngleXYZ(agent.xrot, agent.yrot, agent.zrot);
 		// apply the matrix transformation to translate
 		//auto trans = glm::translate(rot, glm::vec3(agent.x, agent.y, agent.z));
-		
+
 		// create a mat4 with the transform data xrot, yrot, zrot, x,y,z
 		//modelInstances.push_back(ModelInstance(m.get(), trans));
 		modelInstances.push_back(ModelInstance(m.get(), glm::transpose(glm::translate(identity, glm::vec3(agent.x, agent.y, agent.z)) * rot * scale)));
@@ -588,7 +590,7 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate& camera) {
 		models.push_back(std::move(m.second));
 	}
 	modelLookup.clear();
-	
+
 	auto domelight = Model::CreateSphere(vec3(0, 0, 0), 300.0, Material::DiffuseLight(vec3(0.5f, 0.5f, 0.5f)), true);
 	models.push_back(std::unique_ptr<Model>(domelight));
 
