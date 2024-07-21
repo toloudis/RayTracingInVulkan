@@ -143,7 +143,7 @@ void Application::CreateSwapChain()
 	Vulkan::Application::CreateSwapChain();
 
 	CreateOutputImage();
-	
+
 	CreateRayTracingPipelineAndSbt();
 }
 
@@ -168,7 +168,11 @@ void Application::CreateRayTracingPipelineAndSbt() {
 
 	const std::vector<ShaderBindingTable::Entry> rayGenPrograms = { {rayTracingPipeline_->RayGenShaderIndex(), {}} };
 	const std::vector<ShaderBindingTable::Entry> missPrograms = { {rayTracingPipeline_->MissShaderIndex(), {}} };
-	const std::vector<ShaderBindingTable::Entry> hitGroups = { {rayTracingPipeline_->TriangleHitGroupIndex(), {}}, {rayTracingPipeline_->ProceduralHitGroupIndex(), {}} };
+	const std::vector<ShaderBindingTable::Entry> hitGroups = {
+		{rayTracingPipeline_->TriangleHitGroupIndex(), {}},
+		{rayTracingPipeline_->ProceduralHitGroupIndex(), {}},
+		{rayTracingPipeline_->VolumeHitGroupIndex(), {}}
+	};
 
 	shaderBindingTable_.reset(new ShaderBindingTable(*deviceProcedures_, *rayTracingPipeline_, *rayTracingProperties_, rayGenPrograms, missPrograms, hitGroups));
 
@@ -326,6 +330,7 @@ void Application::CreateTopLevelStructures(VkCommandBuffer commandBuffer)
 
 	// Hit group 0: triangles
 	// Hit group 1: procedurals
+	// Hit group 2: volumes
 	uint32_t instanceId = 0;
 
 	for (const auto& modelInstance : scene.ModelInstances())
@@ -334,6 +339,8 @@ void Application::CreateTopLevelStructures(VkCommandBuffer commandBuffer)
 		// If element was found
 		if (modelIndex != -1)
 		{
+			// TODO IF VOLUME THEN HIT GROUP 2
+
 			instances.push_back(TopLevelAccelerationStructure::CreateInstance(
 				bottomAs_[modelIndex], modelInstance.transform_, (uint32_t)modelIndex, modelInstance.model_->Procedural() ? 1 : 0));
 			instanceId++;

@@ -204,7 +204,7 @@ RayTracingPipeline::RayTracingPipeline(
 	VkRayTracingShaderGroupCreateInfoKHR volumeHitGroupInfo = {};
 	volumeHitGroupInfo.sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
 	volumeHitGroupInfo.pNext = nullptr;
-	volumeHitGroupInfo.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_PROCEDURAL_HIT_GROUP_KHR;
+	volumeHitGroupInfo.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
 	volumeHitGroupInfo.generalShader = VK_SHADER_UNUSED_KHR;
 	volumeHitGroupInfo.closestHitShader = 5;
 	volumeHitGroupInfo.anyHitShader = VK_SHADER_UNUSED_KHR;

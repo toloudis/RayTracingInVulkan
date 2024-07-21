@@ -148,6 +148,7 @@ RayTracingPipelineSinglePass::RayTracingPipelineSinglePass(
 	const ShaderModule closestHitShader(device, "../assets/shaders/RayTracingSimple.rchit.spv");
 	const ShaderModule proceduralClosestHitShader(device, "../assets/shaders/RayTracingSimple.Procedural.rchit.spv");
 	const ShaderModule proceduralIntersectionShader(device, "../assets/shaders/RayTracingSimple.Procedural.rint.spv");
+	const ShaderModule volumeClosestHitShader(device, "../assets/shaders/RayTracingSimple.Volume.rchit.spv");
 
 	std::vector<VkPipelineShaderStageCreateInfo> shaderStages =
 	{
@@ -155,7 +156,8 @@ RayTracingPipelineSinglePass::RayTracingPipelineSinglePass(
 		missShader.CreateShaderStage(VK_SHADER_STAGE_MISS_BIT_KHR),
 		closestHitShader.CreateShaderStage(VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR),
 		proceduralClosestHitShader.CreateShaderStage(VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR),
-		proceduralIntersectionShader.CreateShaderStage(VK_SHADER_STAGE_INTERSECTION_BIT_KHR)
+		proceduralIntersectionShader.CreateShaderStage(VK_SHADER_STAGE_INTERSECTION_BIT_KHR),
+		volumeClosestHitShader.CreateShaderStage(VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR)
 	};
 
 	// Shader groups
@@ -198,6 +200,16 @@ RayTracingPipelineSinglePass::RayTracingPipelineSinglePass(
 	proceduralHitGroupInfo.anyHitShader = VK_SHADER_UNUSED_KHR;
 	proceduralHitGroupInfo.intersectionShader = 4;
 	proceduralHitGroupIndex_ = 3;
+
+	VkRayTracingShaderGroupCreateInfoKHR volumeHitGroupInfo = {};
+	volumeHitGroupInfo.sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
+	volumeHitGroupInfo.pNext = nullptr;
+	volumeHitGroupInfo.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
+	volumeHitGroupInfo.generalShader = VK_SHADER_UNUSED_KHR;
+	volumeHitGroupInfo.closestHitShader = 5;
+	volumeHitGroupInfo.anyHitShader = VK_SHADER_UNUSED_KHR;
+	volumeHitGroupInfo.intersectionShader = VK_SHADER_UNUSED_KHR;
+	volumeHitGroupIndex_ = 4;
 
 	std::vector<VkRayTracingShaderGroupCreateInfoKHR> groups =
 	{
