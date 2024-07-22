@@ -51,12 +51,12 @@ void main()
 
 //	RayPayload ScatterLambertian(const Material m, const vec3 direction, const vec3 normal, const vec2 texCoord, const float t, inout uint seed)
 //{
-	//const vec3 direction = gl_WorldRayDirectionEXT;
+	const vec3 objpt = gl_ObjectRayOriginEXT + gl_HitTEXT * gl_ObjectRayDirectionEXT;
 	const float t = gl_HitTEXT;
 	const float isScattered = -1.0;//dot(direction, normal) < 0 ? 1.0 : -1.0;
 
 	//const vec4 texColor = material.DiffuseTextureId >= 0 ? texture(TextureSamplers[nonuniformEXT(material.DiffuseTextureId)], texCoord) : vec4(1);
-	const vec4 colorAndDistance = vec4(1.0,0.0,0.0, t);
+	const vec4 colorAndDistance = vec4(objpt.x+0.5, objpt.y+0.5, objpt.z +0.5, t);
 	const vec4 scatter = vec4(0.0,0.0,0.0,-1.0);//vec4(normal + RandomInUnitSphere(Ray.RandomSeed), -1.0);
 
 	Ray = RayPayload(colorAndDistance, scatter, Ray.RandomSeed);
