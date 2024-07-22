@@ -85,7 +85,15 @@ Model *Model::LoadModel(const std::string &filename,
   }
 
   if (materials.empty()) {
-    materials.emplace_back(*materialoverride);
+      if (materialoverride == nullptr) {
+          Material m{};
+          m.Diffuse = vec4(0.7f, 0.7f, 0.7f, 1.0f);
+          m.DiffuseTextureId = -1;
+          materials.emplace_back(m);
+      }
+      else {
+          materials.emplace_back(*materialoverride);
+      }
   }
 
   // Geometry
