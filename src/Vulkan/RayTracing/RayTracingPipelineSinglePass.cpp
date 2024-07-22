@@ -217,6 +217,7 @@ RayTracingPipelineSinglePass::RayTracingPipelineSinglePass(
 		missGroupInfo,
 		triangleHitGroupInfo,
 		proceduralHitGroupInfo,
+		volumeHitGroupInfo
 	};
 
 	// Create graphic pipeline
