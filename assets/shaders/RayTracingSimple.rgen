@@ -159,7 +159,7 @@ void main()
 	}
 
 	const vec3 accumulatedColor = pixelColor;
-	pixelColor = accumulatedColor;// / Camera.NumberOfSamples;
+	pixelColor = accumulatedColor / float(Camera.NumberOfSamples);
 
 	// Apply raytracing-in-one-weekend gamma correction.
 	pixelColor = sqrt(pixelColor);
