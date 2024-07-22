@@ -11,9 +11,10 @@ namespace Assets
 	class Model;
 	class ModelInstance;
 	class Texture;
+	class VolumeTexture;
 }
 
-typedef std::tuple<std::vector<Assets::ModelInstance>, std::vector<std::unique_ptr<Assets::Model>>, std::vector<Assets::Texture>> SceneAssets;
+typedef std::tuple<std::vector<Assets::ModelInstance>, std::vector<std::unique_ptr<Assets::Model>>, std::vector<Assets::Texture>, std::vector<Assets::VolumeTexture>> SceneAssets;
 
 class SceneList final
 {

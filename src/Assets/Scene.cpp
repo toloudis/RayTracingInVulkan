@@ -9,124 +9,149 @@
 #include "Utilities/Exception.hpp"
 #include "Vulkan/SingleTimeCommands.hpp"
 
-
-namespace Assets {
-
-Scene::Scene(Vulkan::CommandPool& commandPool, std::vector<ModelInstance>&& modelInstances, std::vector<std::unique_ptr<Model>>&& models, std::vector<Texture>&& textures) :
-	modelInstances_(std::move(modelInstances)),
-	models_(std::move(models)),
-	textures_(std::move(textures))
+namespace Assets
 {
-	// Concatenate all the models
-	std::vector<Vertex> vertices;
-	std::vector<uint32_t> indices;
-	std::vector<Material> materials;
-	std::vector<glm::vec4> procedurals;
-	std::vector<VkAabbPositionsKHR> aabbs;
-	std::vector<glm::uvec4> offsets;
 
-	// loops over all unique models
-	for (const auto& model : models_)
+	Scene::Scene(
+		Vulkan::CommandPool &commandPool,
+		std::vector<ModelInstance> &&modelInstances,
+		std::vector<std::unique_ptr<Model>> &&models,
+		std::vector<Texture> &&textures,
+		std::vector<VolumeTexture> &&volumeTextures
+	) : modelInstances_(std::move(modelInstances)),
+		models_(std::move(models)),
+		textures_(std::move(textures)),
+		volumeTextures_(std::move(volumeTextures))
 	{
-		// Remember the index, vertex offsets.
-		const auto indexOffset = static_cast<uint32_t>(indices.size());
-		const auto vertexOffset = static_cast<uint32_t>(vertices.size());
-		const auto materialOffset = static_cast<uint32_t>(materials.size());
-		const auto proceduralOffset = static_cast<uint32_t>(procedurals.size());
+		// Concatenate all the models
+		std::vector<Vertex> vertices;
+		std::vector<uint32_t> indices;
+		std::vector<Material> materials;
+		std::vector<glm::vec4> procedurals;
+		std::vector<VkAabbPositionsKHR> aabbs;
+		std::vector<glm::uvec4> offsets;
 
-		offsets.emplace_back(glm::uvec4(indexOffset, vertexOffset, proceduralOffset, 0));
-
-		// Copy model data one after the other.
-		vertices.insert(vertices.end(), model->Vertices().begin(), model->Vertices().end());
-		indices.insert(indices.end(), model->Indices().begin(), model->Indices().end());
-		materials.insert(materials.end(), model->Materials().begin(), model->Materials().end());
-
-		// Adjust the material id.
-		for (size_t i = vertexOffset; i != vertices.size(); ++i)
+		// loops over all unique models
+		for (const auto &model : models_)
 		{
-			vertices[i].MaterialIndex += materialOffset;
-		}
+			// Remember the index, vertex offsets.
+			const auto indexOffset = static_cast<uint32_t>(indices.size());
+			const auto vertexOffset = static_cast<uint32_t>(vertices.size());
+			const auto materialOffset = static_cast<uint32_t>(materials.size());
+			const auto proceduralOffset = static_cast<uint32_t>(procedurals.size());
 
-		// Add optional procedurals.
-		const auto* const sphere = dynamic_cast<const Sphere*>(model->Procedural());
-		const auto* const sphereGroup = dynamic_cast<const SphereGroup*>(model->Procedural());
-		if (sphere != nullptr)
-		{
-			const auto aabb = sphere->BoundingBox();
-			aabbs.push_back({aabb.first.x, aabb.first.y, aabb.first.z, aabb.second.x, aabb.second.y, aabb.second.z});
-			procedurals.emplace_back(glm::vec4(sphere->Center, sphere->Radius));
-		}
-		else if (sphereGroup != nullptr) {
-			for (size_t i = 0; i < sphereGroup->NumBoundingBoxes(); ++i) {
-				const auto aabb = sphereGroup->BoundingBox(i);
-				aabbs.push_back({ aabb.first.x, aabb.first.y, aabb.first.z, aabb.second.x, aabb.second.y, aabb.second.z });
-				// ???
-				procedurals.emplace_back(glm::vec4(sphereGroup->centers[i], sphereGroup->radii[i]));
+			offsets.emplace_back(glm::uvec4(indexOffset, vertexOffset, proceduralOffset, 0));
+
+			// Copy model data one after the other.
+			vertices.insert(vertices.end(), model->Vertices().begin(), model->Vertices().end());
+			indices.insert(indices.end(), model->Indices().begin(), model->Indices().end());
+			materials.insert(materials.end(), model->Materials().begin(), model->Materials().end());
+
+			// Adjust the material id.
+			for (size_t i = vertexOffset; i != vertices.size(); ++i)
+			{
+				vertices[i].MaterialIndex += materialOffset;
 			}
+
+			// Add optional procedurals.
+			const auto *const sphere = dynamic_cast<const Sphere *>(model->Procedural());
+			const auto *const sphereGroup = dynamic_cast<const SphereGroup *>(model->Procedural());
+			if (sphere != nullptr)
+			{
+				const auto aabb = sphere->BoundingBox();
+				aabbs.push_back({aabb.first.x, aabb.first.y, aabb.first.z, aabb.second.x, aabb.second.y, aabb.second.z});
+				procedurals.emplace_back(glm::vec4(sphere->Center, sphere->Radius));
+			}
+			else if (sphereGroup != nullptr)
+			{
+				for (size_t i = 0; i < sphereGroup->NumBoundingBoxes(); ++i)
+				{
+					const auto aabb = sphereGroup->BoundingBox(i);
+					aabbs.push_back({aabb.first.x, aabb.first.y, aabb.first.z, aabb.second.x, aabb.second.y, aabb.second.z});
+					// ???
+					procedurals.emplace_back(glm::vec4(sphereGroup->centers[i], sphereGroup->radii[i]));
+				}
+			}
+			else
+			{
+				aabbs.emplace_back();
+				procedurals.emplace_back(glm::vec4(0, 0, 0, 0));
+			}
+		}
+
+		constexpr auto flags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+
+		Vulkan::BufferUtil::CreateDeviceBuffer(commandPool, "Vertices", VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | flags, vertices, vertexBuffer_, vertexBufferMemory_);
+		Vulkan::BufferUtil::CreateDeviceBuffer(commandPool, "Indices", VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | flags, indices, indexBuffer_, indexBufferMemory_);
+		Vulkan::BufferUtil::CreateDeviceBuffer(commandPool, "Materials", flags, materials, materialBuffer_, materialBufferMemory_);
+		Vulkan::BufferUtil::CreateDeviceBuffer(commandPool, "Offsets", flags, offsets, offsetBuffer_, offsetBufferMemory_);
+
+		Vulkan::BufferUtil::CreateDeviceBuffer(commandPool, "AABBs", VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | flags, aabbs, aabbBuffer_, aabbBufferMemory_);
+		Vulkan::BufferUtil::CreateDeviceBuffer(commandPool, "Procedurals", flags, procedurals, proceduralBuffer_, proceduralBufferMemory_);
+
+		// Upload all textures
+		textureImages_.reserve(textures_.size());
+		textureImageViewHandles_.resize(textures_.size());
+		textureSamplerHandles_.resize(textures_.size());
+
+		for (size_t i = 0; i != textures_.size(); ++i)
+		{
+			textureImages_.emplace_back(new TextureImage(commandPool, textures_[i]));
+			textureImageViewHandles_[i] = textureImages_[i]->ImageView().Handle();
+			textureSamplerHandles_[i] = textureImages_[i]->Sampler().Handle();
+		}
+
+		// Upload all volume textures
+		volumeTextureImages_.reserve(volumeTextures_.size());
+		volumeTextureImageViewHandles_.resize(volumeTextures_.size());
+		volumeTextureSamplerHandles_.resize(volumeTextures_.size());
+
+		for (size_t i = 0; i != volumeTextures_.size(); ++i)
+		{
+			volumeTextureImages_.emplace_back(new VolumeTextureImage(commandPool, volumeTextures_[i]));
+			volumeTextureImageViewHandles_[i] = volumeTextureImages_[i]->ImageView().Handle();
+			volumeTextureSamplerHandles_[i] = volumeTextureImages_[i]->Sampler().Handle();
+		}
+	}
+
+	Scene::~Scene()
+	{
+		textureSamplerHandles_.clear();
+		textureImageViewHandles_.clear();
+		textureImages_.clear();
+		volumeTextureSamplerHandles_.clear();
+		volumeTextureImageViewHandles_.clear();
+		volumeTextureImages_.clear();
+		proceduralBuffer_.reset();
+		proceduralBufferMemory_.reset(); // release memory after bound buffer has been destroyed
+		aabbBuffer_.reset();
+		aabbBufferMemory_.reset(); // release memory after bound buffer has been destroyed
+		offsetBuffer_.reset();
+		offsetBufferMemory_.reset(); // release memory after bound buffer has been destroyed
+		materialBuffer_.reset();
+		materialBufferMemory_.reset(); // release memory after bound buffer has been destroyed
+		indexBuffer_.reset();
+		indexBufferMemory_.reset(); // release memory after bound buffer has been destroyed
+		vertexBuffer_.reset();
+		vertexBufferMemory_.reset(); // release memory after bound buffer has been destroyed
+	}
+
+	int64_t Scene::indexOf(const Model *m) const
+	{
+		// get index of model to find the bottom level AS for it.
+		auto it = std::find_if(models_.begin(), models_.end(),
+							   [m](const std::unique_ptr<Model> &p)
+							   { return p.get() == m; });
+		// If element was found
+		if (it != models_.end())
+		{
+			// calculating the index of this model
+			return it - models_.begin();
 		}
 		else
 		{
-			aabbs.emplace_back();
-			procedurals.emplace_back(glm::vec4(0,0,0,0));
+			return -1;
 		}
 	}
-
-	constexpr auto flags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
-
-	Vulkan::BufferUtil::CreateDeviceBuffer(commandPool, "Vertices", VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | flags, vertices, vertexBuffer_, vertexBufferMemory_);
-	Vulkan::BufferUtil::CreateDeviceBuffer(commandPool, "Indices", VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | flags, indices, indexBuffer_, indexBufferMemory_);
-	Vulkan::BufferUtil::CreateDeviceBuffer(commandPool, "Materials", flags, materials, materialBuffer_, materialBufferMemory_);
-	Vulkan::BufferUtil::CreateDeviceBuffer(commandPool, "Offsets", flags, offsets, offsetBuffer_, offsetBufferMemory_);
-
-	Vulkan::BufferUtil::CreateDeviceBuffer(commandPool, "AABBs", VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | flags, aabbs, aabbBuffer_, aabbBufferMemory_);
-	Vulkan::BufferUtil::CreateDeviceBuffer(commandPool, "Procedurals", flags, procedurals, proceduralBuffer_, proceduralBufferMemory_);
-
-	
-	// Upload all textures
-	textureImages_.reserve(textures_.size());
-	textureImageViewHandles_.resize(textures_.size());
-	textureSamplerHandles_.resize(textures_.size());
-
-	for (size_t i = 0; i != textures_.size(); ++i)
-	{
-	   textureImages_.emplace_back(new TextureImage(commandPool, textures_[i]));
-	   textureImageViewHandles_[i] = textureImages_[i]->ImageView().Handle();
-	   textureSamplerHandles_[i] = textureImages_[i]->Sampler().Handle();
-	}
-}
-
-Scene::~Scene()
-{
-	textureSamplerHandles_.clear();
-	textureImageViewHandles_.clear();
-	textureImages_.clear();
-	proceduralBuffer_.reset();
-	proceduralBufferMemory_.reset(); // release memory after bound buffer has been destroyed
-	aabbBuffer_.reset();
-	aabbBufferMemory_.reset(); // release memory after bound buffer has been destroyed
-	offsetBuffer_.reset();
-	offsetBufferMemory_.reset(); // release memory after bound buffer has been destroyed
-	materialBuffer_.reset();
-	materialBufferMemory_.reset(); // release memory after bound buffer has been destroyed
-	indexBuffer_.reset();
-	indexBufferMemory_.reset(); // release memory after bound buffer has been destroyed
-	vertexBuffer_.reset();
-	vertexBufferMemory_.reset(); // release memory after bound buffer has been destroyed
-}
-
-int64_t Scene::indexOf(const Model* m) const {
-	// get index of model to find the bottom level AS for it.
-	auto it = std::find_if(models_.begin(), models_.end(),
-		[m](const std::unique_ptr<Model>& p) { return p.get() == m; });
-	// If element was found
-	if (it != models_.end())
-	{
-		// calculating the index of this model
-		return it - models_.begin();
-	}
-	else {
-		return -1;
-	}
-}
 
 }

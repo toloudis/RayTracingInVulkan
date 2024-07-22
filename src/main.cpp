@@ -29,8 +29,8 @@ int main(int argc, const char* argv[]) noexcept
 	try
 	{
 
-AssetCache cache("./pdbcache/");
-std::shared_ptr<AssetEntry> testasset = cache.get("https://files.rcsb.org/download/7TPT.cif");
+//AssetCache cache("./pdbcache/");
+//std::shared_ptr<AssetEntry> testasset = cache.get("https://files.rcsb.org/download/7TPT.cif");
 
 
 		const Options options(argc, argv);

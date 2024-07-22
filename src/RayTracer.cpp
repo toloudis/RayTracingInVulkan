@@ -290,15 +290,18 @@ void RayTracer::LoadScene(const uint32_t sceneIndex)
 {
 	// create the scene!
 
-	auto [modelInstances, models, textures] = SceneList::AllScenes[sceneIndex].second(cameraInitialSate_);
+	auto [modelInstances, models, textures, volumeTextures] = SceneList::AllScenes[sceneIndex].second(cameraInitialSate_);
 
 	// If there are no texture, add a dummy one. It makes the pipeline setup a lot easier.
 	if (textures.empty())
 	{
 		textures.push_back(Assets::Texture::LoadTexture("../assets/textures/white.png", Vulkan::SamplerConfig()));
 	}
+	if (volumeTextures.empty()) {
+		volumeTextures.push_back(Assets::VolumeTexture(1, 1, 1, { 0 }));
+	}
 
-	scene_.reset(new Assets::Scene(CommandPool(), std::move(modelInstances), std::move(models), std::move(textures)));
+	scene_.reset(new Assets::Scene(CommandPool(), std::move(modelInstances), std::move(models), std::move(textures), std::move(volumeTextures)));
 	sceneIndex_ = sceneIndex;
 
 	userSettings_.FieldOfView = cameraInitialSate_.FieldOfView;

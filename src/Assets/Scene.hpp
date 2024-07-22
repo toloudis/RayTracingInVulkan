@@ -19,38 +19,47 @@ namespace Assets
 	class ModelInstance;
 	class Texture;
 	class TextureImage;
+	class VolumeTexture;
+	class VolumeTextureImage;
 
 	class Scene final
 	{
 	public:
+		Scene(const Scene &) = delete;
+		Scene(Scene &&) = delete;
+		Scene &operator=(const Scene &) = delete;
+		Scene &operator=(Scene &&) = delete;
 
-		Scene(const Scene&) = delete;
-		Scene(Scene&&) = delete;
-		Scene& operator = (const Scene&) = delete;
-		Scene& operator = (Scene&&) = delete;
-
-		Scene(Vulkan::CommandPool& commandPool, std::vector<ModelInstance>&& modelInstances, std::vector<std::unique_ptr<Model>>&& models, std::vector<Texture>&& textures);
+		Scene(
+			Vulkan::CommandPool &commandPool,
+			std::vector<ModelInstance> &&modelInstances,
+			std::vector<std::unique_ptr<Model>> &&models,
+			std::vector<Texture> &&textures,
+			std::vector<VolumeTexture> &&volumeTextures);
 		~Scene();
 
-		const std::vector<std::unique_ptr<Model>>& Models() const { return models_; }
-		int64_t indexOf(const Model* m) const;
+		const std::vector<std::unique_ptr<Model>> &Models() const { return models_; }
+		int64_t indexOf(const Model *m) const;
 
-		const std::vector<ModelInstance>& ModelInstances() const { return modelInstances_; }
+		const std::vector<ModelInstance> &ModelInstances() const { return modelInstances_; }
 		bool HasProcedurals() const { return static_cast<bool>(proceduralBuffer_); }
 
-		const Vulkan::Buffer& VertexBuffer() const { return *vertexBuffer_; }
-		const Vulkan::Buffer& IndexBuffer() const { return *indexBuffer_; }
-		const Vulkan::Buffer& MaterialBuffer() const { return *materialBuffer_; }
-		const Vulkan::Buffer& OffsetsBuffer() const { return *offsetBuffer_; }
-		const Vulkan::Buffer& AabbBuffer() const { return *aabbBuffer_; }
-		const Vulkan::Buffer& ProceduralBuffer() const { return *proceduralBuffer_; }
+		const Vulkan::Buffer &VertexBuffer() const { return *vertexBuffer_; }
+		const Vulkan::Buffer &IndexBuffer() const { return *indexBuffer_; }
+		const Vulkan::Buffer &MaterialBuffer() const { return *materialBuffer_; }
+		const Vulkan::Buffer &OffsetsBuffer() const { return *offsetBuffer_; }
+		const Vulkan::Buffer &AabbBuffer() const { return *aabbBuffer_; }
+		const Vulkan::Buffer &ProceduralBuffer() const { return *proceduralBuffer_; }
 		const std::vector<VkImageView> TextureImageViews() const { return textureImageViewHandles_; }
 		const std::vector<VkSampler> TextureSamplers() const { return textureSamplerHandles_; }
+		const std::vector<VkImageView> VolumeImageViews() const { return volumeTextureImageViewHandles_; }
+		const std::vector<VkSampler> VolumeSamplers() const { return volumeTextureSamplerHandles_; }
 
 	private:
 		const std::vector<ModelInstance> modelInstances_;
 		const std::vector<std::unique_ptr<Model>> models_;
 		const std::vector<Texture> textures_;
+		const std::vector<VolumeTexture> volumeTextures_;
 
 		std::unique_ptr<Vulkan::Buffer> vertexBuffer_;
 		std::unique_ptr<Vulkan::DeviceMemory> vertexBufferMemory_;
@@ -73,6 +82,10 @@ namespace Assets
 		std::vector<std::unique_ptr<TextureImage>> textureImages_;
 		std::vector<VkImageView> textureImageViewHandles_;
 		std::vector<VkSampler> textureSamplerHandles_;
+
+		std::vector<std::unique_ptr<VolumeTextureImage>> volumeTextureImages_;
+		std::vector<VkImageView> volumeTextureImageViewHandles_;
+		std::vector<VkSampler> volumeTextureSamplerHandles_;
 	};
 
 }

@@ -28,6 +28,7 @@ using Assets::Material;
 using Assets::Model;
 using Assets::ModelInstance;
 using Assets::Texture;
+using Assets::VolumeTexture;
 
 namespace
 {
@@ -122,7 +123,7 @@ SceneAssets SceneList::CubeAndSpheres(CameraInitialSate &camera)
 		modelInstances.push_back(ModelInstance(m.get()));
 	}
 
-	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::move(textures));
+	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::move(textures), std::vector<VolumeTexture>());
 }
 
 SceneAssets SceneList::RayTracingInOneWeekend(CameraInitialSate &camera)
@@ -157,7 +158,7 @@ SceneAssets SceneList::RayTracingInOneWeekend(CameraInitialSate &camera)
 		modelInstances.push_back(ModelInstance(m.get()));
 	}
 
-	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
+	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>(), std::vector<VolumeTexture>());
 }
 
 SceneAssets SceneList::PlanetsInOneWeekend(CameraInitialSate &camera)
@@ -197,7 +198,7 @@ SceneAssets SceneList::PlanetsInOneWeekend(CameraInitialSate &camera)
 		modelInstances.push_back(ModelInstance(m.get()));
 	}
 
-	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::move(textures));
+	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::move(textures), std::vector<VolumeTexture>());
 }
 
 SceneAssets SceneList::LucyInOneWeekend(CameraInitialSate &camera)
@@ -265,7 +266,7 @@ SceneAssets SceneList::LucyInOneWeekend(CameraInitialSate &camera)
 		modelInstances.push_back(ModelInstance(m.get()));
 	}
 
-	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
+	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>(), std::vector<VolumeTexture>());
 }
 
 SceneAssets SceneList::CornellBox(CameraInitialSate &camera)
@@ -299,7 +300,7 @@ SceneAssets SceneList::CornellBox(CameraInitialSate &camera)
 		modelInstances.push_back(ModelInstance(m.get()));
 	}
 
-	return std::make_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
+	return std::make_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>(), std::vector<VolumeTexture>());
 }
 
 SceneAssets SceneList::CornellBoxLucy(CameraInitialSate &camera)
@@ -335,7 +336,7 @@ SceneAssets SceneList::CornellBoxLucy(CameraInitialSate &camera)
 		modelInstances.push_back(ModelInstance(m.get()));
 	}
 
-	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
+	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>(), std::vector<VolumeTexture>());
 }
 
 static std::vector<std::string> SplitWithCharacters(const std::string &str, int splitLength)
@@ -623,7 +624,8 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate &camera)
 		return 0; });
 	// stuff this data into a 3d texture
 	auto volumeTexture = new Assets::VolumeTexture(128, 128, 128, volumeData);
-
+	std::vector<VolumeTexture> volumeTextures;
+	volumeTextures.push_back((*volumeTexture));
 	// volumes should always be 0,0,0-1,1,1 and use scale transforms to size them in the world.
 	// in this way, the ray tracer can use the object space ray coordinates to sample the volume.
 	auto volume = Model::CreateVolume(vec3(-0.5, -0.5, -0.5), vec3(0.5, 0.5, 0.5), Material::Lambertian(vec3(0.5f, 0.5f, 0.5f)));
@@ -631,7 +633,7 @@ SceneAssets SceneList::SimulariumTrajectory(CameraInitialSate &camera)
 	models.push_back(std::unique_ptr<Model>(volume));
 	modelInstances.push_back(ModelInstance(volume, tvol));
 
-	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
+	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>(), std::move(volumeTextures));
 }
 
 SceneAssets SceneList::Molecules(CameraInitialSate &camera)
@@ -715,5 +717,5 @@ SceneAssets SceneList::Molecules(CameraInitialSate &camera)
 	camera.ModelView = lookAt(vec3(0, 0, volumeSize), vec3(0, 0, 0), vec3(0, 1, 0));
 	camera.HasSky = false;
 
-	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>());
+	return std::forward_as_tuple(std::move(modelInstances), std::move(models), std::vector<Texture>(), std::vector<VolumeTexture>());
 }
