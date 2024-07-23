@@ -101,7 +101,7 @@ void main()
 	// - pixel: we want the same random seed for each pixel to get a homogeneous anti-aliasing.
 	// - ray: we want a noisy random seed, different for each pixel.
 	uint pixelRandomSeed = Camera.RandomSeed;
-	Ray.RandomSeed = InitRandomSeed(InitRandomSeed(gl_LaunchIDEXT.x, gl_LaunchIDEXT.y), Camera.TotalNumberOfSamples);
+	Ray.RandomSeed = InitRandomSeed(InitRandomSeed(gl_LaunchIDEXT.x, gl_LaunchIDEXT.y), 0);//Camera.TotalNumberOfSamples);
 
 	vec3 pixelColor = vec3(0);
 
