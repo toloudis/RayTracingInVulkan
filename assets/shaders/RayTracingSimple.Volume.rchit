@@ -9,7 +9,7 @@ layout(binding = 5) readonly buffer IndexArray { uint Indices[]; };
 layout(binding = 6) readonly buffer MaterialArray { Material[] Materials; };
 layout(binding = 7) readonly buffer OffsetArray { uvec4[] Offsets; };
 layout(binding = 8) uniform sampler2D[] TextureSamplers;
-layout(binding = 9) uniform sampler3D[] VolumeTextureSamplers;
+layout(binding = 9) uniform usampler3D[] VolumeTextureSamplers;
 
 #include "Scatter.glsl"
 #include "Vertex.glsl"
@@ -52,13 +52,30 @@ void main()
 
 //	RayPayload ScatterLambertian(const Material m, const vec3 direction, const vec3 normal, const vec2 texCoord, const float t, inout uint seed)
 //{
-	const vec3 objpt = gl_ObjectRayOriginEXT + gl_HitTEXT * gl_ObjectRayDirectionEXT;
-	const float t = gl_HitTEXT;
+	vec3 objpt = gl_ObjectRayOriginEXT + gl_HitTEXT * gl_ObjectRayDirectionEXT;
+	float t = gl_HitTEXT;
+	const float tStep = 0.1;
+
+	// walk the objpt along the ray until the volume returns a nonzero value:
+	bool inBounds = true;
+	uint intensity = 0;
+	while (intensity == 0 && inBounds)
+	{
+		intensity += texture(VolumeTextureSamplers[nonuniformEXT(0)], objpt+vec3(0.5,0.5,0.5)).x;
+		objpt += gl_ObjectRayDirectionEXT * tStep;
+		t += tStep;
+		inBounds = objpt.x >= -0.5 && objpt.x <= 0.5 && objpt.y >= -0.5 && objpt.y <= 0.5 && objpt.z >= -0.5 && objpt.z <= 0.5;
+	}
+	// material.DiffuseTextureId as volume texture id?
+	//float volsample = texture(VolumeTextureSamplers[nonuniformEXT(0)], texCoord).x;
+
+
+
 	const float isScattered = -1.0;//dot(direction, normal) < 0 ? 1.0 : -1.0;
 
 	//const vec4 texColor = material.DiffuseTextureId >= 0 ? texture(TextureSamplers[nonuniformEXT(material.DiffuseTextureId)], texCoord) : vec4(1);
-	const vec4 colorAndDistance = vec4(objpt.x+0.5, objpt.y+0.5, objpt.z +0.5, t);
-	const vec4 scatter = vec4(0.0,0.0,0.0,-1.0);//vec4(normal + RandomInUnitSphere(Ray.RandomSeed), -1.0);
+	const vec4 colorAndDistance = intensity>0?vec4(1.0, 0.0,0.0,t):vec4(1.0,1.0,1.0,t);//vec4(objpt.x+0.5, objpt.y+0.5, objpt.z +0.5, t);
+	const vec4 scatter = intensity>0?vec4(0.0,0.0,0.0,-1.0):vec4(gl_ObjectRayDirectionEXT, 1.0);//vec4(normal + RandomInUnitSphere(Ray.RandomSeed), -1.0);
 
 	Ray = RayPayload(colorAndDistance, scatter, Ray.RandomSeed);
 }

@@ -70,7 +70,12 @@ namespace Assets
 			VK_FORMAT_R16_UINT));
 		imageMemory_.reset(new Vulkan::DeviceMemory(image_->AllocateMemory(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)));
 		imageView_.reset(new Vulkan::VolumeImageView(device, image_->Handle(), image_->Format(), VK_IMAGE_ASPECT_COLOR_BIT));
-		sampler_.reset(new Vulkan::Sampler(device, Vulkan::SamplerConfig()));
+		auto &config = Vulkan::SamplerConfig();
+		config.MagFilter = VK_FILTER_NEAREST;
+		config.MinFilter = VK_FILTER_NEAREST;
+		config.MipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+		sampler_.reset(new Vulkan::Sampler(device, config));
+
 
 		// Transfer the data to device side.
 		image_->TransitionImageLayout(commandPool, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
